@@ -1,0 +1,735 @@
+# main.py
+from functools import partial
+import sys
+from typing import List
+
+from PyQt6 import QtCore, QtWidgets, uic, QtGui
+import pyqtgraph as pg
+import pyvisa
+
+from visa_worker import VisaWorker, Sample
+from si1287_setup import Si1287Setup
+
+DEFAULT_SETUP_CMDS = [
+    "TR1",
+    "RU1",
+    "PX3",
+    "PY5",
+    "OS0",
+    "RH1",
+    "OT1",
+]
+
+
+class MainWindow(QtWidgets.QMainWindow):
+    # UI → worker signals (queued)
+    connectRequested = QtCore.pyqtSignal(str)
+    disconnectRequested = QtCore.pyqtSignal()
+    commandRequested = QtCore.pyqtSignal(str, object)
+    # applySetupRequested = QtCore.pyqtSignal(list)
+    startStreamRequested = QtCore.pyqtSignal()
+    stopStreamRequested = QtCore.pyqtSignal()
+    # identifyRequested = QtCore.pyqtSignal()
+    # statusRequested = QtCore.pyqtSignal()
+    # lastErrorRequested = QtCore.pyqtSignal()
+    # clearErrorRequested = QtCore.pyqtSignal()
+    # setModeRequested = QtCore.pyqtSignal(int)
+    # breakSelfTestRequested = QtCore.pyqtSignal(int)
+
+    configurationChanged = QtCore.pyqtSignal(str, object)
+
+    def __init__(self):
+        super().__init__()
+        uic.loadUi("si1287_main.ui", self)
+
+        # -------- Setup model (tracks changes / save / load) --------
+        self.setup = Si1287Setup()
+        self.applySetupButton.setEnabled(False)
+
+        # Menu (does not require UI changes)
+        self._setup_menu()
+
+
+        # -------- Plot --------
+        self.plotWidget = pg.PlotWidget()
+        self.plotWidget.showGrid(x=True, y=True)
+        self.plotWidget.setLabel("bottom", "Time", units="s")
+        self.plotWidget.setLabel("left", "Value")
+        self.plotFrameLayout.addWidget(self.plotWidget)
+        self.plotPlaceholderLabel.hide()
+
+        self.curveA = self.plotWidget.plot([], [])
+        self.curveB = self.plotWidget.plot([], [])
+
+        self.t: List[float] = []
+        self.a: List[float] = []
+        self.b: List[float] = []
+        self.max_points = 2000
+
+        # -------- Setup text --------
+        # if not self.setupText.toPlainText().strip():
+        #     self.setupText.setPlainText("\n".join(DEFAULT_SETUP_CMDS))
+
+        # -------- Worker thread --------
+        self.worker = VisaWorker()
+        self.thread = QtCore.QThread(self)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.start)
+
+        # Worker → UI
+        self.worker.logLine.connect(self.append_log)
+        self.worker.connectedChanged.connect(self.on_connected_changed)
+        self.worker.sampleReady.connect(self.on_sample)
+
+        # UI → Worker (queued)
+        q = QtCore.Qt.ConnectionType.QueuedConnection
+        self.connectRequested.connect(self.worker.connectVisa, q)
+        self.disconnectRequested.connect(self.worker.disconnectVisa, q)
+        # self.applySetupRequested.connect(self.worker.apply_setup, q)
+        self.startStreamRequested.connect(self.worker.start_stream, q)
+        self.stopStreamRequested.connect(self.worker.stop_stream, q)
+        self.identifyButton.clicked.connect(lambda: self.configurationChanged.emit("?VN",None))
+        self.statusButton.clicked.connect(lambda: self.configurationChanged.emit("?ST",None))
+        # self.lastErrorRequested.connect(self.worker.last_error, q)
+        # self.clearErrorRequested.connect(self.worker.clear_error, q)
+        # self.setModeRequested.connect(self.worker.set_mode, q)
+        # self.breakSelfTestRequested.connect(self.worker.break_self_test,q)
+        
+        self.configurationChanged.connect(self._route_configuration_changed)
+        self.commandRequested.connect(self.worker.send_command, q)
+
+        
+        
+
+        # -------- Buttons --------
+        self.connectButton.clicked.connect(self._connect_clicked)
+        self.closeButton.clicked.connect(self._close_clicked )
+
+        # self.identifyButton.clicked.connect(lambda: self.identifyRequested.emit())
+        # self.statusButton.clicked.connect(lambda: self.statusRequested.emit())
+        self.lastErrorButton.clicked.connect(lambda: self.configurationChanged.emit("?ER",None))
+        self.clearErrorButton.clicked.connect(lambda: self.configurationChanged.emit("?CE",None))
+        
+        self.breakButton.clicked.connect(lambda: self.configurationChanged.emit("BK",0))
+        self.selfTestButton.clicked.connect(lambda: self.configurationChanged.emit("BK",1))
+        self.resetButton.clicked.connect(lambda: self.configurationChanged.emit("BK",3))
+        self.initializeButton.clicked.connect(lambda: self.configurationChanged.emit("BK",4))
+
+        # self.potentiostatButton.clicked.connect(lambda: self.setModeRequested.emit(0))
+        # self.galvanostatButton.clicked.connect(lambda: self.setModeRequested.emit(1))
+
+        # self.applySetupButton.clicked.connect(self._apply_setup_clicked)
+        self.startStreamButton.clicked.connect(self._start_stream_clicked)
+        self.stopStreamButton.clicked.connect(self._stop_stream_clicked)
+        
+        self.refreshButton.clicked.connect(self._populate_visa_resources)
+
+        # Map setup commands -> widgets (for load-to-UI)
+        self._setup_widget_map = {}
+
+
+
+        # 6.1  CELL POLARIZATION 
+        # 6.2 STANDBY STATE
+        # 6.3 POLARIZATION ON MODE
+        self.polarizationModeCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PO", idx))
+        self._setup_widget_map["PO"] = self.polarizationModeCombo
+        self.dcPotentialSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("PV", val))
+        self._setup_widget_map["PV"] = self.dcPotentialSpin
+        self.standbyModeCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("BY", idx))
+        self._setup_widget_map["BY"] = self.standbyModeCombo
+        self.polarizationOnModeCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("ON", idx))
+        self._setup_widget_map["ON"] = self.polarizationOnModeCombo
+        self.polarizationSignalGainCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PI", idx))
+        self._setup_widget_map["PI"] = self.polarizationSignalGainCombo
+
+        # 6.4 CONTROL LOOP BANDWIDTH
+        self.bandwidthCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("SY", idx))
+        self._setup_widget_map["SY"] = self.bandwidthCombo
+        self.bandwidthGalvanostatCombo.setCurrentIndex(2)
+        self.bandwidthGalvanostatCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("GB", idx))
+        self._setup_widget_map["GB"] = self.bandwidthGalvanostatCombo
+        self.bandwidthPotentiostatCombo.setCurrentIndex(2)
+        self.bandwidthPotentiostatCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PB", idx))
+        self._setup_widget_map["PB"] = self.bandwidthPotentiostatCombo
+
+        # 6.5 STANDARD RESISTOR SELECTION
+        self.standardResistantCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RR", idx))
+        self._setup_widget_map["RR"] = self.standardResistantCombo
+        # 6.6 CURRENT LIMIT SELECTION (In conjunction with Auto-range RR0)
+        self.currentLimitCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("IL", idx))
+        self._setup_widget_map["IL"] = self.currentLimitCombo
+        # 6.7 CURRENT OFF-LIMIT ACTION
+        self.currentOffLimitActionCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("OL", idx))
+        self._setup_widget_map["OL"] = self.currentOffLimitActionCombo
+
+        # 6.8 IR COMPENSATION TYPE AND ON/OFF
+        self.irCompensationCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("CC", idx))
+        self._setup_widget_map["CC"] = self.irCompensationCombo
+        self.irCompensationTypeCombo.currentIndexChanged.connect(lambda idx: self.ir_compensation_type_changed(idx))
+        self._setup_widget_map["CT"] = self.irCompensationTypeCombo
+        # 6.9 FEEDBACK IR COMPENSATION
+        self.feedbackCompensationSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IC", val))
+        self._setup_widget_map["IC"] = self.feedbackCompensationSpin
+        # 6.10 6.10 SAMPLED IR COMPENSATION
+        self.cellCurrentOffTimeTypeCombo.setEnabled(False)
+        self.outputToFRACombo.setEnabled(False)
+        self.cellCurrentOffSpin.setEnabled(False)
+
+        self.outputToFRACombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RO", idx))
+        self._setup_widget_map["RO"] = self.outputToFRACombo
+        self.cellCurrentOffTimeTypeCombo.currentIndexChanged.connect(self.cell_current_off_time_type_combo_index_changed)
+        self.cellCurrentOffSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IN", val) if self.cellCurrentOffTimeTypeCombo.currentIndex() == 0 else self.configurationChanged.emit("IF", int(val)))
+        self._setup_widget_map["IN"] = self.cellCurrentOffSpin
+
+
+        # 6.11 REAL PART CORRECTION
+        self.realPartCorrectionCombo.currentIndexChanged.connect(self.realpart_correction_combo_index_changed)
+        self.realPartCorrectionSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("RP", val))
+        self._setup_widget_map["RP"] = self.realPartCorrectionSpin
+
+        # 6.12 Output conditioning facilities
+        self.voltageBiasSpin.setEnabled(False)
+        self.currentBiasSpin.setEnabled(False)
+        self.voltageBiasCombo.currentIndexChanged.connect(self.voltage_bias_combo_index_changed)
+        self.voltageBiasSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("VR", val))
+        self._setup_widget_map["VR"] = self.voltageBiasSpin
+        self.currentBiasCombo.currentIndexChanged.connect(self.current_bias_combo_index_changed)
+        self.currentBiasSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IR", val))
+        self._setup_widget_map["IR"] = self.currentBiasSpin
+
+        self.biasRejectCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("BR", idx))
+        self._setup_widget_map["BR"] = self.biasRejectCombo
+        self.filterCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("FI", idx))
+        self._setup_widget_map["FI"] = self.filterCombo
+        self.voltageAmplificationCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("VX", idx))
+        self._setup_widget_map["VX"] = self.voltageAmplificationCombo
+        self.currentAmplificationCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("IX", idx))
+        self._setup_widget_map["IX"] = self.currentAmplificationCombo
+        
+        # 6.13 SWEEP Definition
+        self.offModeCombo.currentIndexChanged.connect(self.sweep_off_mode_combo_index_changed)
+        # self.sweepStandbyButton.clicked.connect(lambda: self.configurationChanged("SW",0))
+        self.sweepStepButton.clicked.connect(self.sweep_step_button_clicked)
+        self.sweepRampButton.clicked.connect(self.sweep_ramp_button_clicked)
+        self.sweepStatusButton.clicked.connect(lambda: self.configurationChanged("?ST",None))
+        
+        # 6.16 DVM Control Functions
+        self.numberOfDigitsCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("DG", idx))
+        self._setup_widget_map["DG"] = self.numberOfDigitsCombo
+        self.inputRangeCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RG", idx))
+        self._setup_widget_map["RG"] = self.inputRangeCombo
+        self.measurementTriggerCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("TR", idx))
+        self._setup_widget_map["TR"] = self.measurementTriggerCombo
+        self.driftCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("DC", idx))
+        self._setup_widget_map["DC"] = self.driftCombo
+        self.averagingtCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("AV", idx))
+        self._setup_widget_map["AV"] = self.averagingtCombo
+        self.nullCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("NU", idx))
+        self._setup_widget_map["NU"] = self.nullCombo
+        self.digitalVolmeterCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RU", idx))
+        self._setup_widget_map["RU"] = self.digitalVolmeterCombo
+        
+        # 6.17 OUTPUT Parameter Selection
+        self.outputXCombo.setCurrentIndex(3)
+        self.outputYCombo.setCurrentIndex(5)
+        self.outputXCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PX", idx))
+        self._setup_widget_map["PX"] = self.outputXCombo
+        self.outputYCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PY", idx))
+        self._setup_widget_map["PY"] = self.outputYCombo
+        
+        
+        
+                # Start worker thread only after UI wiring is complete
+        self.thread.start()
+
+# -------- VISA resource enumeration --------
+        self._populate_visa_resources()
+
+        # Initial state
+        # self._set_controls_enabled(False)
+        # self.disconnectButton.setEnabled(False)
+    def _setup_menu(self):
+        """Create a basic File menu (no UI edit needed)."""
+        menubar = self.menuBar()
+
+        file_menu = menubar.addMenu("File")
+
+        act_save = QtGui.QAction("Save setup…", self)
+        act_save.setShortcut("Ctrl+S")
+        act_save.triggered.connect(self.save_setup)
+        file_menu.addAction(act_save)
+
+        act_load = QtGui.QAction("Load setup…", self)
+        act_load.setShortcut("Ctrl+O")
+        act_load.triggered.connect(self.load_setup)
+        file_menu.addAction(act_load)
+
+
+    def save_setup(self):
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save setup", "", "JSON (*.json)"
+        )
+        if not path:
+            return
+        try:
+            self.setup.save(path)
+            self.append_log(f"Saved setup: {path}")
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Save failed", str(e))
+
+
+    def load_setup(self):
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Load setup", "", "JSON (*.json)"
+        )
+        if not path:
+            return
+        try:
+            self.setup.load(path)
+            self.append_log(f"Loaded setup: {path}")
+
+            # Update UI widgets if your code provides this helper; otherwise just enable Apply.
+            if hasattr(self, "_apply_setup_to_ui"):
+                self._apply_setup_to_ui()
+
+            # Enable Apply so you can push loaded settings to the instrument
+            self.applySetupButton.setEnabled(True)
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Load failed", str(e))
+    # ---------------- VISA enumeration ----------------
+    def _populate_visa_resources(self):
+        self.resourceCombo.clear()
+        try:
+            rm = pyvisa.ResourceManager()
+            resources = rm.list_resources()
+            rm.close()
+
+            if not resources:
+                self.resourceCombo.addItem("No VISA resources found")
+                self.resourceCombo.setEnabled(False)
+                return
+
+            self.resourceCombo.addItems(resources)
+            self.resourceCombo.setEnabled(True)
+
+            # Prefer GPIB instruments
+            for i, r in enumerate(resources):
+                if r.startswith("GPIB"):
+                    self.resourceCombo.setCurrentIndex(i)
+                    break
+
+            self.append_log(f"VISA resources found: {resources}")
+
+        except Exception as e:
+            self.resourceCombo.addItem("VISA not available")
+            self.resourceCombo.setEnabled(False)
+            self.append_log(f"VISA scan failed: {e}")
+
+    # ---------------- UI handlers ----------------
+    def closeEvent(self, event):
+        try:
+            self.disconnectRequested.emit()
+        except Exception:
+            pass
+        self.thread.quit()
+        self.thread.wait(2000)
+        super().closeEvent(event)
+
+    def _connect_clicked(self):
+        if not self.resourceCombo.isEnabled():
+            return
+        res = self.resourceCombo.currentText()
+        self.append_log(f"UI: Connect clicked ({res})")
+        self.connectRequested.emit(res)
+        
+    def _close_clicked(self):
+       
+        self.disconnectRequested.emit()
+
+    # def _apply_setup_clicked(self):
+    #     cmds = [line.strip() for line in self.setupText.toPlainText().splitlines()]
+    #     self.applySetupRequested.emit(cmds)
+
+    def _start_stream_clicked(self):
+        self.t.clear()
+        self.a.clear()
+        self.b.clear()
+        self.curveA.setData([], [])
+        self.curveB.setData([], [])
+
+        self.startStreamRequested.emit()
+        self.startStreamButton.setEnabled(False)
+        self.stopStreamButton.setEnabled(True)
+
+    def _stop_stream_clicked(self):
+        self.stopStreamRequested.emit()
+        self.startStreamButton.setEnabled(True)
+        self.stopStreamButton.setEnabled(False)
+
+    # def _set_controls_enabled(self, enabled: bool):
+    #     # for w in [
+    #     #     self.identifyButton, self.statusButton, self.lastErrorButton, self.clearErrorButton,
+    #     #     self.potentiostatButton, self.galvanostatButton,
+    #     #     self.applySetupButton, self.setupText,
+    #     #     self.colASpin, self.colBSpin,
+    #     #     self.startStreamButton, self.stopStreamButton,
+    #     #     # self.disconnectButton,
+    #     # ]:
+    #     #     w.setEnabled(enabled)
+    #     self.connectButton.setEnabled(not enabled)
+    #     self.resourceCombo.setEnabled(not enabled)
+
+    @QtCore.pyqtSlot(bool)
+    @QtCore.pyqtSlot(str, object)
+    def _route_configuration_changed(self, cmd: str, value: object):
+        """Route UI configuration changes.
+
+        - Query/action commands are sent immediately to the worker/instrument.
+        - Configuration commands are stored in Si1287Setup and marked dirty; Apply sends only dirty.
+        """
+        cmd = (cmd or "").strip()
+        if not cmd:
+            return
+
+        # Immediate commands (do not store in setup)
+        if cmd.startswith("?") or cmd in ("BK",):
+            self.commandRequested.emit(cmd, value)
+            return
+
+        # If caller passed None, treat as immediate (rare, but safe)
+        if value is None:
+            self.commandRequested.emit(cmd, None)
+            return
+
+        # Store + mark dirty
+        self.setup.set(cmd, value)
+        # Enable Apply only when connected; otherwise keep it disabled
+        if self.connectButton.isEnabled() is False:  # connected state in your UI logic
+            self.applySetupButton.setEnabled(True)
+
+
+    def on_connected_changed(self, ok: bool):
+        # self._set_controls_enabled(ok)
+        self.connectButton.setEnabled(not ok)
+        self.refreshButton.setEnabled(not ok)
+        self.closeButton.setEnabled(ok)
+        self.applySetupButton.setEnabled(ok)
+        self.statusButton.setEnabled(ok)
+        self.lastErrorButton.setEnabled(ok)        
+        self.identifyButton.setEnabled(ok)
+        self.clearErrorButton.setEnabled(ok)
+        self.breakButton.setEnabled(ok)
+        self.resetButton.setEnabled(ok)
+        self.selfTestButton.setEnabled(ok)
+        self.initializeButton.setEnabled(ok)
+        self.resultOverallButton.setEnabled(ok)
+        self.resultRAMButton.setEnabled(ok)
+        self.resultROMButton.setEnabled(ok)
+        self.resultTimerButton.setEnabled(ok)
+        self.sweepStandbyButton.setEnabled(ok)
+        self.sweepStartButton.setEnabled(ok)
+        self.sweepStepButton.setEnabled(ok)
+        self.clearErrorButton.setEnabled(ok)    
+        
+        if ok:
+            self.stopStreamButton.setEnabled(False)
+            self.startStreamButton.setEnabled(True)
+        else:
+            self.stopStreamButton.setEnabled(False)
+            self.startStreamButton.setEnabled(False)
+
+    @QtCore.pyqtSlot(object)
+    def on_sample(self, sample: Sample):
+        i0 = int(self.colASpin.value())
+        i1 = int(self.colBSpin.value())
+
+        v0 = sample.vals[i0] if i0 < len(sample.vals) else float("nan")
+        v1 = sample.vals[i1] if i1 < len(sample.vals) else float("nan")
+
+        self.t.append(sample.t)
+        self.a.append(v0)
+        self.b.append(v1)
+
+        if len(self.t) > self.max_points:
+            self.t = self.t[-self.max_points:]
+            self.a = self.a[-self.max_points:]
+            self.b = self.b[-self.max_points:]
+
+        self.curveA.setData(self.t, self.a)
+        self.curveB.setData(self.t, self.b)
+
+    @QtCore.pyqtSlot(str)
+    def append_log(self, s: str):
+        self.logText.appendPlainText(s)
+        sb = self.logText.verticalScrollBar()
+        sb.setValue(sb.maximum())
+
+    @QtCore.pyqtSlot(int)
+    def ir_compensation_type_changed(self, idx: int):
+        self.configurationChanged.emit("CT", idx)
+        if idx == 0:
+            self.feedbackCompensationSpin.setEnabled(True)
+            self.cellCurrentOffTimeTypeCombo.setEnabled(False)
+            self.outputToFRACombo.setEnabled(False)
+            self.cellCurrentOffSpin.setEnabled(False)
+        elif idx == 1:
+            self.feedbackCompensationSpin.setEnabled(False)
+            self.cellCurrentOffTimeTypeCombo.setEnabled(True)
+            self.outputToFRACombo.setEnabled(True)
+            self.cellCurrentOffSpin.setEnabled(True)
+
+    @QtCore.pyqtSlot(int)
+    def cell_current_off_time_type_combo_index_changed(self, idx: int):
+        if idx == 0:
+            self.cellCurrentOffTypeLabel.setText("Cell Current Off Time (µs))") 
+            self.cellCurrentOffSpin.setMaximum(1360)  
+            self.cellCurrentOffSpin.setMinimum(26.6)
+            self.cellCurrentOffSpin.setValue(self.cellCurrentOffSpin.value() * 1360.0 / 255)
+            self.cellCurrentOffSpin.setSingleStep(1)       
+        elif idx == 1:
+            self.cellCurrentOffTypeLabel.setText("Cell Current Off Ratio")
+            self.cellCurrentOffSpin.setMaximum(255)  
+            self.cellCurrentOffSpin.setMinimum(1)
+            self.cellCurrentOffSpin.setValue(int(self.cellCurrentOffSpin.value() * 255 / 1360))
+            self.cellCurrentOffSpin.setSingleStep(1)    
+    
+    @QtCore.pyqtSlot(int)
+    def realpart_correction_combo_index_changed(self, idx: int):        
+        if idx == 0:
+            self.configurationChanged.emit("CC", 0)
+            self.realPartCorrectionSpin.setEnabled(True)
+        elif idx == 1:
+            self.configurationChanged.emit("CC", 2)
+            self.realPartCorrectionSpin.setEnabled(False)
+            
+    @QtCore.pyqtSlot(int)
+    def voltage_bias_combo_index_changed(self,idx:int):
+        if idx == 0:
+            self.configurationChanged.emit("VT", 0)
+            self.voltageBiasSpin.setEnabled(False)
+        elif idx == 1:
+            self.configurationChanged.emit("VT", 1)
+            self.voltageBiasSpin.setEnabled(True)
+            
+    @QtCore.pyqtSlot(int)
+    def current_bias_combo_index_changed(self,idx:int):
+        if idx == 0:
+            self.configurationChanged.emit("IT", 0)
+            self.currentBiasSpin.setEnabled(False)
+        elif idx == 1:
+            self.configurationChanged.emit("IT", 1)
+            self.currentBiasSpin.setEnabled(True)
+            
+    @QtCore.pyqtSlot(int)
+    def sweep_off_mode_combo_index_changed(self,idx:int):
+        if idx == 0:
+            self.configurationChanged.emit("OF", 0)
+            # self.sweepStandbyButton.setText("Sweep Standby")
+            self.sweetRampButton.setEnabled(True)
+            self.sweetStepButton.setEnabled(True)
+        elif idx == 1:
+            self.configurationChanged.emit("OF", 1)
+            # self.sweepStandbyButton.setText("Sweep Freeze")
+            self.sweetRampButton.setEnabled(False)
+            self.sweetStepButton.setEnabled(False)
+        self.configurationChanged("SW",0)
+            
+    @QtCore.pyqtSlot()
+    def sweep_step_button_clicked(self):
+        if self.offModeCombo.currentIndex == 1:
+            self.append_log("Instrument Sweep Mode Freeze")
+        else:
+            self.configurationChanged.emit("DL", self.delaySpin.value)
+            self.configurationChanged.emit("SM",self.numberOfSegmentSpin.value)
+            self.configurationChanged.emit("SA", self.speedSweepVoltage1Spin.value)
+            self.configurationChanged.emit("KA", self.speedSweepCurrent1Spin.value)
+            self.configurationChanged.emit("SB", self.speedSweepVoltage2Spin.value)
+            self.configurationChanged.emit("KB", self.speedSweepCurrent2Spin.value)
+            self.configurationChanged.emit("SC", self.speedSweepVoltage3Spin.value)
+            self.configurationChanged.emit("KC", self.speedSweepCurrent3Spin.value)
+            self.configurationChanged.emit("SD", self.speedSweepVoltage4Spin.value)
+            self.configurationChanged.emit("KD", self.speedSweepCurrent4Spin.value)
+            self.configurationChanged.emit("TE", self.speedSweepTime1Spin.value)
+            self.configurationChanged.emit("VS", self.speedSweepVoltageStepSpin.value)
+            self.configurationChanged.emit("IS", self.speedSweepCurrentStepSpin.value)
+            self.configurationChanged.emit("SW",2)
+            
+    @QtCore.pyqtSlot()
+    def sweep_ramp_button_clicked(self):
+        if self.offModeCombo.currentIndex == 1:
+            self.append_log("Instrument Sweep Mode Freeze")
+        else:
+            self.configurationChanged.emit("DL", self.delaySpin.value)
+            self.configurationChanged.emit("SM",self.numberOfSegmentSpin.value)
+            self.configurationChanged.emit("VA", self.rampSweepVoltage1Spin.value)
+            self.configurationChanged.emit("JA", self.rampSweepCurrent1Spin.value)
+            self.configurationChanged.emit("TA", self.rampSweepTime1Spin.value)
+            self.configurationChanged.emit("VB", self.rampSweepVoltage2Spin.value)
+            self.configurationChanged.emit("JB", self.rampSweepCurrent2Spin.value)
+            self.configurationChanged.emit("TB", self.rampSweepTime2Spin.value)
+            self.configurationChanged.emit("VC", self.rampSweepVoltage3Spin.value)
+            self.configurationChanged.emit("JC", self.rampSweepCurrent3Spin.value)
+            self.configurationChanged.emit("TC", self.rampSweepTime3Spin.value)
+            self.configurationChanged.emit("VD", self.rampSweepVoltage4Spin.value)
+            self.configurationChanged.emit("JD", self.rampSweepCurrent4Spin.value)
+            self.configurationChanged.emit("TD", self.rampSweepTime4Spin.value)            
+            self.configurationChanged.emit("SW",1)
+            
+
+# ---------------- Setup persistence & menu ----------------
+def _setup_menu(self):
+    """Create a small File menu for Save/Load setup without editing the .ui."""
+    menubar = self.menuBar()
+    file_menu = menubar.addMenu("&File")
+
+    act_load = QtWidgets.QAction("Load setup...", self)
+    act_save = QtWidgets.QAction("Save setup...", self)
+    act_exit = QtWidgets.QAction("Exit", self)
+
+    act_load.triggered.connect(self.load_setup)
+    act_save.triggered.connect(self.save_setup)
+    act_exit.triggered.connect(self.close)
+
+    file_menu.addAction(act_load)
+    file_menu.addAction(act_save)
+    file_menu.addSeparator()
+    file_menu.addAction(act_exit)
+
+def save_setup(self):
+    path, _ = QtWidgets.QFileDialog.getSaveFileName(
+        self,
+        "Save SI1287 setup",
+        "si1287_setup.json",
+        "JSON (*.json);;All files (*.*)",
+    )
+    if not path:
+        return
+    try:
+        self.setup.save(path)
+        self.append_log(f"Setup saved to: {path}")
+    except Exception as e:
+        self.append_log(f"Save setup failed: {e}")
+
+def load_setup(self):
+    path, _ = QtWidgets.QFileDialog.getOpenFileName(
+        self,
+        "Load SI1287 setup",
+        "",
+        "JSON (*.json);;All files (*.*)",
+    )
+    if not path:
+        return
+    try:
+        self.setup.load(path)
+        self.append_log(f"Setup loaded from: {path}")
+
+        # Apply loaded values into widgets (best-effort).
+        # This will also mark them dirty inside Si1287Setup.
+        self._apply_setup_to_ui()
+        self.applySetupButton.setEnabled(True)
+    except Exception as e:
+        self.append_log(f"Load setup failed: {e}")
+        
+def _apply_setup_clicked(self):
+    """
+    Send ONLY dirty settings to the instrument.
+    Clears dirty flags after successful send.
+    """
+    try:
+        dirty = self.setup.get_dirty_commands()
+        if not dirty:
+            self.append_log("Apply: no changes.")
+            self.applySetupButton.setEnabled(False)
+            return
+
+        self.append_log(f"Apply: sending {len(dirty)} changed setting(s)...")
+
+        # send each changed command to worker (queued)
+        for cmd, value in dirty.items():
+            self.commandRequested.emit(cmd, value)
+
+        # mark clean
+        self.setup.clear_dirty()
+        self.applySetupButton.setEnabled(False)
+        self.append_log("Apply: done.")
+
+    except Exception as e:
+        self.append_log(f"Apply failed: {e}")
+
+def _apply_setup_to_ui(self):
+    """Best-effort: push known setup keys into UI widgets without triggering instrument writes."""
+    # Temporarily block signals to avoid emitting configurationChanged while we set widget state.
+    blockers = []
+
+    def _blk(w):
+        try:
+            blockers.append(QtCore.QSignalBlocker(w))
+        except Exception:
+            pass
+
+    # NOTE: Map only the widgets you actually use.
+    mapping = {
+        "PO": getattr(self, "polarizationModeCombo", None),
+        "PV": getattr(self, "dcPotentialSpin", None),
+        "BY": getattr(self, "standbyModeCombo", None),
+        "ON": getattr(self, "polarizationOnModeCombo", None),
+        "PI": getattr(self, "polarizationSignalGainCombo", None),
+        "SY": getattr(self, "bandwidthCombo", None),
+        "GB": getattr(self, "bandwidthGalvanostatCombo", None),
+        "PB": getattr(self, "bandwidthPotentiostatCombo", None),
+        "RR": getattr(self, "standardResistantCombo", None),
+        "IL": getattr(self, "currentLimitCombo", None),
+        "OL": getattr(self, "currentOffLimitActionCombo", None),
+        "CC": getattr(self, "irCompensationCombo", None),
+        "CT": getattr(self, "irCompensationTypeCombo", None),
+        "IC": getattr(self, "feedbackCompensationSpin", None),
+        "RO": getattr(self, "outputToFRACombo", None),
+        "RP": getattr(self, "realPartCorrectionSpin", None),
+        "BR": getattr(self, "biasRejectCombo", None),
+        "FI": getattr(self, "filterCombo", None),
+        "VX": getattr(self, "voltageAmplificationCombo", None),
+        "IX": getattr(self, "currentAmplificationCombo", None),
+        "DG": getattr(self, "numberOfDigitsCombo", None),
+        "RG": getattr(self, "inputRangeCombo", None),
+        "TR": getattr(self, "measurementTriggerCombo", None),
+        "DC": getattr(self, "driftCombo", None),
+        "AV": getattr(self, "averagingtCombo", None),
+        "NU": getattr(self, "nullCombo", None),
+        "RU": getattr(self, "digitalVolmeterCombo", None),
+        "PX": getattr(self, "outputXCombo", None),
+        "PY": getattr(self, "outputYCombo", None),
+    }
+
+    for cmd, widget in mapping.items():
+        if widget is None:
+            continue
+        if cmd not in self.setup.values:
+            continue
+        _blk(widget)
+        val = self.setup.values[cmd]
+
+        # QComboBox expects int index; SpinBoxes expect numeric.
+        try:
+            if hasattr(widget, "setCurrentIndex"):
+                widget.setCurrentIndex(int(val))
+            elif hasattr(widget, "setValue"):
+                widget.setValue(val)
+        except Exception:
+            # ignore per-widget failures
+            pass
+
+    # blockers go out of scope and unblock
+    del blockers
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    pg.setConfigOptions(antialias=True)
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
