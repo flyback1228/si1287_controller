@@ -20,7 +20,10 @@ class VisaWorker(QtCore.QObject):
     logLine = QtCore.pyqtSignal(str)
     connectedChanged = QtCore.pyqtSignal(bool)
     sampleReady = QtCore.pyqtSignal(object)  # Sample
-
+    polarizationChanged = QtCore.pyqtSignal(bool)
+    
+    
+    
     def __init__(self):
         super().__init__()
         self._rm: Optional[pyvisa.ResourceManager] = None
@@ -28,6 +31,9 @@ class VisaWorker(QtCore.QObject):
 
         self._streaming = False
         self._t0 = 0.0
+        
+        self._polarization = False
+
 
         self._timer: Optional[QtCore.QTimer] = None
 
@@ -272,6 +278,31 @@ class VisaWorker(QtCore.QObject):
         except Exception as e:
             self._log(f"Stop stream failed: {e}")
 
-
+    @QtCore.pyqtSlot()
+    def start_polarization(self):
+        try:
+            if self._inst is not None:
+                self._write("PW1")
+                time.sleep(1)
+                r = self._query("?ER", timeout_ms=5000)
+                if int(r) == 0:
+                    self._polarization = True
+                    self.polarizationChanged.emit(True)
+        except Exception as e:
+            self._log(f"Start polarization failed: {e}")
+            
+    @QtCore.pyqtSlot()
+    def stop_polarization(self):
+        try:
+            if self._inst is not None:
+                self._write("PW0")                
+                time.sleep(1)
+                r = self._query("?ER", timeout_ms=5000)
+                if int(r) == 0:
+                    self._polarization = False
+                    self.polarizationChanged.emit(False)
+        except Exception as e:
+            self._log(f"Stop polarization failed: {e}")    
+                   
 
 __all__ = ["VisaWorker", "Sample"]

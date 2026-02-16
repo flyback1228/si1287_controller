@@ -208,9 +208,14 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi("si1287_main.ui", self)
         
         self.connLed = StatusLed(14)
-        self.statusBar().addPermanentWidget(QtWidgets.QLabel("Instrument:"))
+        self.statusBar().addPermanentWidget(QtWidgets.QLabel("Instrument Connection:"))
         self.statusBar().addPermanentWidget(self.connLed)
         self.connLed.set_connected(False)
+        
+        self.polarizationLed = StatusLed(14)
+        self.statusBar().addPermanentWidget(QtWidgets.QLabel("Polarization:"))
+        self.statusBar().addPermanentWidget(self.polarizationLed)
+        self.polarizationLed.set_connected(False)
 
         # -------- Plot --------
         self.plotWidget = pg.PlotWidget()
@@ -294,10 +299,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dcPotentialSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("PV", val))
         self.standbyModeCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("BY", idx))
         self.polarizationOnModeCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("ON", idx))
+        self.polarizationSignalGainCombo.setCurrentIndex(1)
         self.polarizationSignalGainCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PI", idx))
 
+        self.worker.polarizationChanged.connect(self.on_polarization_changed)
+        self.startPolarizationButton.clicked.connect(self.worker.start_polarization)
+        self.stopPolarizationButton.clicked.connect(self.worker.stop_polarization)
+
         # 6.4 CONTROL LOOP BANDWIDTH
-        self.bandwidthCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("SY", idx))
+        self.bandwidthCombo.currentIndexChanged.connect(self.bandwidth_combo_index_changed)
         self.bandwidthGalvanostatCombo.setCurrentIndex(2)
         self.bandwidthGalvanostatCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("GB", idx))
         self.bandwidthPotentiostatCombo.setCurrentIndex(2)
@@ -306,12 +316,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # 6.5 STANDARD RESISTOR SELECTION
         self.standardResistantCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RR", idx))
         # 6.6 CURRENT LIMIT SELECTION (In conjunction with Auto-range RR0)
+        self.currentLimitCombo.setCurrentIndex(6)
         self.currentLimitCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("IL", idx))
         # 6.7 CURRENT OFF-LIMIT ACTION
         self.currentOffLimitActionCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("OL", idx))
 
         # 6.8 IR COMPENSATION TYPE AND ON/OFF
-        self.irCompensationCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("CC", idx))
+        self.irCompensationCombo.currentIndexChanged.connect(self.ir_compensation_combo_index_changed)
         self.irCompensationTypeCombo.currentIndexChanged.connect(lambda idx: self.ir_compensation_type_changed(idx))
         # 6.9 FEEDBACK IR COMPENSATION
         self.feedbackCompensationSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IC", val))
@@ -327,6 +338,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 6.11 REAL PART CORRECTION
         self.realPartCorrectionCombo.currentIndexChanged.connect(self.realpart_correction_combo_index_changed)
+        self.realPartCorrectionSpin.setEnabled(False)
         self.realPartCorrectionSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("RP", val))
 
         # 6.12 Output conditioning facilities
@@ -359,11 +371,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.digitalVolmeterCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RU", idx))
         
         # 6.17 OUTPUT Parameter Selection
+        
         self.outputXCombo.setCurrentIndex(3)
         self.outputYCombo.setCurrentIndex(5)
         self.outputXCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PX", idx))
         self.outputYCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("PY", idx))
-        
+     
+        self.displayLeftCombo.setCurrentIndex(3)
+        self.displayRightCombo.setCurrentIndex(5)
+        self.displayLeftCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("UL", idx))
+        self.displayRightCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("UR", idx))
+
         self.setup = Si1287Setup()
         self.applySetupButton.setEnabled(False)
 
@@ -479,7 +497,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resultRAMButton.setEnabled(ok)
         self.resultROMButton.setEnabled(ok)
         self.resultTimerButton.setEnabled(ok)
-        self.sweepStandbyButton.setEnabled(ok)
+        # self.sweepStandbyButton.setEnabled(ok)
         self.sweepStartButton.setEnabled(ok)
         self.sweepStepButton.setEnabled(ok)
         self.clearErrorButton.setEnabled(ok)    
@@ -491,6 +509,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.stopStreamButton.setEnabled(False)
             self.startStreamButton.setEnabled(False)
         self.connLed.set_connected(ok)
+
+    @QtCore.pyqtSlot(bool)
+    def on_polarization_changed(self, ok: bool):
+        self.polarizationLed.set_connected(ok)
+        
+        
+    
+           
 
     @QtCore.pyqtSlot(object)
     def on_sample(self, sample: Sample):
@@ -517,6 +543,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.logText.appendPlainText(s)
         sb = self.logText.verticalScrollBar()
         sb.setValue(sb.maximum())
+        
+    @QtCore.pyqtSlot(int)
+    def bandwidth_combo_index_changed(self, idx:int):
+        if idx == 0:
+            self.configurationChanged.emit("SY",0)
+            self.bandwidthGalvanostatCombo.setEnabled(True)
+            self.bandwidthPotentiostatCombo.setEnabled(True)
+        elif idx == 1:
+            self.bandwidthGalvanostatCombo.setCurrentIndex(2)
+            self.bandwidthGalvanostatCombo.setEnabled(False)
+            self.bandwidthPotentiostatCombo.setCurrentIndex(2)
+            self.bandwidthPotentiostatCombo.setEnabled(False)            
+            self.configurationChanged.emit("SY",1)
+            
 
     @QtCore.pyqtSlot(int)
     def ir_compensation_type_changed(self, idx: int):
@@ -547,10 +587,22 @@ class MainWindow(QtWidgets.QMainWindow):
             self.cellCurrentOffSpin.setValue(int(self.cellCurrentOffSpin.value() * 255 / 1360))
             self.cellCurrentOffSpin.setSingleStep(1)    
     
+    @QtCore.pyqtSlot(int)    
+    def ir_compensation_combo_index_changed(self,idx:int):
+        if idx == 0:
+            self.realPartCorrectionCombo.setCurrentIndex(0)
+            self.configurationChanged("CC",0)
+            self.realPartCorrectionSpin.setEnabled(False)
+        elif idx == 1:
+            self.configurationChanged("CC",1)
+            self.realPartCorrectionSpin.setEnabled(True)
+        
+    
     @QtCore.pyqtSlot(int)
     def realpart_correction_combo_index_changed(self, idx: int):        
         if idx == 0:
             self.configurationChanged.emit("CC", 0)
+            self.irCompensationCombo.setCurrentIndex(0)
             self.realPartCorrectionSpin.setEnabled(False)
         elif idx == 1:
             self.configurationChanged.emit("CC", 2)
@@ -646,6 +698,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
 
         self.setup.values["RR"] = self.standardResistantCombo.currentIndex()
+        
         self.setup.values["IL"] = self.currentLimitCombo.currentIndex()
         self.setup.values["OL"] = self.currentOffLimitActionCombo.currentIndex()
         self.setup.values["CC"] = self.irCompensationCombo.currentIndex()
