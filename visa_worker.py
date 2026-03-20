@@ -21,6 +21,7 @@ class VisaWorker(QtCore.QObject):
     connectedChanged = QtCore.pyqtSignal(bool)
     sampleReady = QtCore.pyqtSignal(object)  # Sample
     polarizationChanged = QtCore.pyqtSignal(bool)
+    errorStatusChanged = QtCore.pyqtSignal(bool)
     
     
     
@@ -44,11 +45,20 @@ class VisaWorker(QtCore.QObject):
     @QtCore.pyqtSlot()
     def start(self):
         """Called once when the worker thread starts."""
-        self._timer = QtCore.QTimer()
+        self._timer = QtCore.QTimer(self)
         self._timer.setInterval(20)  # ms
         self._timer.timeout.connect(self._tick)
         self._timer.start()
         self._log("Worker started (timer running).")
+
+    @QtCore.pyqtSlot()
+    def shutdown(self):
+        self._streaming = False
+        if self._timer is not None:
+            self._timer.stop()
+            self._timer.deleteLater()
+            self._timer = None
+        self._cleanup()
 
     def _tick(self):
         """Polling loop (runs in worker thread via QTimer)."""
@@ -99,7 +109,11 @@ class VisaWorker(QtCore.QObject):
             raise RuntimeError("Not connected")
 
     def _write(self, cmd: str):
-        self._ensure_connected()
+        try:
+            self._ensure_connected()
+        except Exception:
+            self._log("Write failed: Not connected")
+            return
         cmd = cmd.strip()
         if not cmd:
             return
@@ -107,7 +121,11 @@ class VisaWorker(QtCore.QObject):
         self._log(f">> {cmd}")
 
     def _query(self, cmd: str, timeout_ms: int = 5000) -> str:
-        self._ensure_connected()
+        try:
+            self._ensure_connected()
+        except Exception:
+            self._log("Query failed: Not connected")
+            return ""
         old_to = self._inst.timeout
         self._inst.timeout = timeout_ms
         try:
@@ -115,9 +133,58 @@ class VisaWorker(QtCore.QObject):
             self._log(f">> {cmd}")
             resp = self._inst.read()
             self._log(f"<< {resp!r}")
+            if cmd.strip().upper() == "?ER":
+                self._emit_error_status(resp)
             return resp
         finally:
             self._inst.timeout = old_to
+
+    def _emit_error_status(self, resp: str):
+        txt = (resp or "").strip()
+        try:
+            # SI1287 ?ER is expected to return an integer status code.
+            code = int(txt.split(",")[0].strip())
+            self.errorStatusChanged.emit(code == 0)
+        except Exception:
+            self._log(f"Unable to parse ?ER response: {resp!r}")
+            self.errorStatusChanged.emit(False)
+
+    def _parse_status_code(self, resp: str) -> Optional[int]:
+        txt = (resp or "").strip()
+        if not txt:
+            return None
+        try:
+            return int(txt.split(",")[0].strip())
+        except Exception:
+            return None
+
+    def _query_with_retry(
+        self, cmd: str, timeout_ms: int = 5000, attempts: int = 3, delay_s: float = 0.2
+    ) -> str:
+        last_error = None
+        for i in range(attempts):
+            try:
+                return self._query(cmd, timeout_ms=timeout_ms)
+            except Exception as e:
+                last_error = e
+                if i < attempts - 1:
+                    self._log(
+                        f"{cmd} query failed ({i + 1}/{attempts}), retrying..."
+                    )
+                    time.sleep(delay_s)
+        raise last_error
+
+    def _write_and_check_error(
+        self, cmd: str, delay_s: float = 0.05, timeout_ms: int = 2000
+    ) -> Optional[int]:
+        self._write(cmd)
+        if delay_s > 0:
+            time.sleep(delay_s)
+        r = self._query("?ER", timeout_ms=timeout_ms)
+        code = self._parse_status_code(r)
+        if code not in (None, 0):
+            self._log(f"Command {cmd!r} rejected by instrument (?ER={r.strip()!r}).")
+        return code
 
     # ---- Public slots called by UI (queued to worker thread) ----
     @QtCore.pyqtSlot(str)
@@ -139,8 +206,13 @@ class VisaWorker(QtCore.QObject):
             self._log(f"Connected: {resource}")
 
             # quick sanity queries
-            self._query("?VN", timeout_ms=5000)
-            self._query("?ER", timeout_ms=5000)
+            try:
+                self._query_with_retry("?VN", timeout_ms=5000, attempts=3, delay_s=0.2)
+                self._query_with_retry("?ER", timeout_ms=5000, attempts=3, delay_s=0.2)
+            except Exception as e:
+                # Keep the transport connection state as connected.
+                # Some instruments respond slowly right after opening a VISA session.
+                self._log(f"Connected, but startup query failed: {e}")
 
         except Exception as e:
             self._log(f"Connect failed: {e}")
@@ -164,6 +236,7 @@ class VisaWorker(QtCore.QObject):
 
         self._cleanup()
         self.connectedChanged.emit(False)
+        self.errorStatusChanged.emit(False)
         self._log("Disconnected.")
 
     def _cleanup(self):
@@ -193,7 +266,10 @@ class VisaWorker(QtCore.QObject):
             except Exception as e:
                 self._log(f"Query Command {str} Failed: {e}")
         else:
-            self._write(f"{str}{obj}")
+            try:
+                self._write(f"{str}{obj}")
+            except Exception as e:
+                self._log(f"Write Command {str}{obj} Failed: {e}")
 
     # @QtCore.pyqtSlot()
     # def identify(self):
@@ -263,8 +339,27 @@ class VisaWorker(QtCore.QObject):
         try:
             self._ensure_connected()
             self._t0 = time.time()
+            self._streaming = False
+
+            # Put the SI1287 into a known-good measurement state before graph output.
+            setup_cmds = ["CE", "DG0", "RG0", "TR1", "DC0", "AV0", "NU0", "RU1", "PX3", "PY5"]
+            for cmd in setup_cmds:
+                code = self._write_and_check_error(cmd)
+                if code not in (None, 0):
+                    self._log(f"Start stream aborted during setup command {cmd!r}.")
+                    return
+
+            code = self._write_and_check_error("GP0", delay_s=0.1)
+            if code not in (None, 0):
+                self._log("Start stream aborted while resetting graph output.")
+                return
+
+            code = self._write_and_check_error("GP1", delay_s=0.1)
+            if code not in (None, 0):
+                self._log("Start stream aborted when enabling graph output.")
+                return
+
             self._streaming = True
-            self._write("GP1")
         except Exception as e:
             self._log(f"Start stream failed: {e}")
             self._streaming = False
@@ -285,9 +380,29 @@ class VisaWorker(QtCore.QObject):
                 self._write("PW1")
                 time.sleep(1)
                 r = self._query("?ER", timeout_ms=5000)
-                if int(r) == 0:
+                code = self._parse_status_code(r)
+                if code == 0:
                     self._polarization = True
                     self.polarizationChanged.emit(True)
+                else:
+                    # If the SI1287 reports an error after PW1, force the output
+                    # back off so a rejected start cannot leave polarization on.
+                    try:
+                        self._write("PW0")
+                        time.sleep(0.2)
+                        rollback = self._query("?ER", timeout_ms=5000)
+                        self._log(
+                            f"Rollback after failed PW1 returned ?ER={rollback.strip()!r}."
+                        )
+                    except Exception as rollback_error:
+                        self._log(
+                            f"Rollback after failed PW1 also failed: {rollback_error}"
+                        )
+                    self._polarization = False
+                    self.polarizationChanged.emit(False)
+                    self._log(
+                        f"Start polarization rejected by instrument (?ER={r.strip()!r})."
+                    )
         except Exception as e:
             self._log(f"Start polarization failed: {e}")
             
@@ -298,9 +413,14 @@ class VisaWorker(QtCore.QObject):
                 self._write("PW0")                
                 time.sleep(1)
                 r = self._query("?ER", timeout_ms=5000)
-                if int(r) == 0:
+                code = self._parse_status_code(r)
+                if code == 0:
                     self._polarization = False
                     self.polarizationChanged.emit(False)
+                else:
+                    self._log(
+                        f"Stop polarization rejected by instrument (?ER={r.strip()!r})."
+                    )
         except Exception as e:
             self._log(f"Stop polarization failed: {e}")    
                    

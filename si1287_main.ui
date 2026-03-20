@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -24,355 +24,62 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QGroupBox" name="groupBox">
+       <widget class="QLabel" name="labelResource">
+        <property name="text">
+         <string>VISA Resource:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="resourceCombo">
         <property name="minimumSize">
          <size>
-          <width>0</width>
-          <height>100</height>
+          <width>150</width>
+          <height>0</height>
          </size>
         </property>
-        <property name="title">
-         <string>Connection</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <item>
-          <layout class="QHBoxLayout" name="connLayout">
-           <item>
-            <widget class="QLabel" name="labelResource">
-             <property name="text">
-              <string>VISA Resource:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="resourceCombo">
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="refreshButton">
-             <property name="text">
-              <string>Refresh</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QPushButton" name="connectButton">
-             <property name="text">
-              <string>Connect</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="closeButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Close</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_2">
-        <property name="title">
-         <string>Quick Test</string>
+       <widget class="QPushButton" name="refreshButton">
+        <property name="text">
+         <string>Refresh</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="0" column="0">
-            <widget class="QPushButton" name="statusButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Instrument Status</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QPushButton" name="identifyButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Identify</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="lastErrorButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Last Error</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QPushButton" name="clearErrorButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Clear Error</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_4">
-        <property name="title">
-         <string>Break&amp;&amp;Self-Test</string>
+       <widget class="QPushButton" name="connectButton">
+        <property name="text">
+         <string>Connect</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_7">
-         <item>
-          <layout class="QGridLayout" name="gridLayout_16">
-           <item row="0" column="0">
-            <widget class="QPushButton" name="breakButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Break</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QPushButton" name="selfTestButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Self-Test</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="resetButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Reset</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QPushButton" name="initializeButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Initialize</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_5">
-        <property name="title">
-         <string>Self-Test Result</string>
+       <widget class="QPushButton" name="closeButton">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_8">
-         <item>
-          <layout class="QGridLayout" name="gridLayout_17">
-           <item row="0" column="0">
-            <widget class="QPushButton" name="resultOverallButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Overall</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QPushButton" name="resultRAMButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>RAM</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="resultROMButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>ROM</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QPushButton" name="resultTimerButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Timer</string>
-             </property>
-             <property name="autoDefault">
-              <bool>false</bool>
-             </property>
-             <property name="default">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
+        <property name="text">
+         <string>Close</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
       <item>
@@ -398,7 +105,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>5</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -412,6 +119,9 @@
             </property>
             <item row="4" column="2">
              <spacer name="verticalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -478,7 +188,10 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Standby Mode: &lt;span style=&quot; color:#ff0000;&quot;&gt;Full&lt;/span&gt; for POL, ∑POL, CE and &lt;span style=&quot; color:#ff0000;&quot;&gt;HALF&lt;/span&gt; for RE1, RE2, ∆RE, ∆RE-Bi, POL, ∑POL, CE, I, I-Bi&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Standby Mode: &lt;span style=&quot; color:#ff0000;&quot;&gt;Full&lt;/span&gt; for POL, âˆ‘POL, CE and &lt;span style=&quot; color:#ff0000;&quot;&gt;HALF&lt;/span&gt; for RE1, RE2, âˆ†RE, âˆ†RE-Bi, POL, âˆ‘POL, CE, I, I-Bi&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="currentIndex">
+               <number>-1</number>
               </property>
               <item>
                <property name="text">
@@ -502,6 +215,9 @@
               </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sets SI1287 operation mode&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="currentIndex">
+               <number>-1</number>
               </property>
               <item>
                <property name="text">
@@ -528,7 +244,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Defines the d.c. potential, in volts, that is to be applied across RE1 and RE2 for the potentiostat. (F=-14.5 to +14.5)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="decimals">
-               <number>4</number>
+               <number>7</number>
               </property>
               <property name="minimum">
                <double>-14.500000000000000</double>
@@ -553,7 +269,10 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;An external signal (typically from an FRA) is added to the polarization selected by PVF or PC F, at a gain of ×1 or 0.01(-40dB)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;An external signal (typically from an FRA) is added to the polarization selected by PVF or PC F, at a gain of Ã—1 or 0.01(-40dB)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="currentIndex">
+               <number>1</number>
               </property>
               <item>
                <property name="text">
@@ -783,6 +502,9 @@
             </item>
             <item row="3" column="1">
              <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -817,6 +539,9 @@
            <layout class="QGridLayout" name="gridLayout_5">
             <item row="2" column="1">
              <spacer name="verticalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -840,42 +565,42 @@
               </item>
               <item>
                <property name="text">
-                <string>0.1Ω -- 2A</string>
+                <string>0.1ohm -- 2A</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>1Ω -- 200mA</string>
+                <string>1ohm -- 200mA</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>10Ω -- 20mA</string>
+                <string>10ohm -- 20mA</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>100Ω -- 2mA</string>
+                <string>100ohm -- 2mA</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>1kΩ -- 200µA</string>
+                <string>1kohm -- 200ÂµA</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>10kΩ -- 20µA</string>
+                <string>10kohm -- 20ÂµA</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>100kΩ -- 2µA</string>
+                <string>100kohm -- 2ÂµA</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>1MΩ -- 200nA</string>
+                <string>1Mohm -- 200nA</string>
                </property>
               </item>
              </widget>
@@ -1172,6 +897,9 @@
             </item>
             <item row="6" column="1">
              <spacer name="verticalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -1319,6 +1047,9 @@
           </item>
           <item>
            <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
@@ -1338,6 +1069,9 @@
            <layout class="QGridLayout" name="gridLayout_7">
             <item row="5" column="1">
              <spacer name="verticalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -1368,7 +1102,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Voltage bias reject. Fixed rejection voltage  F= 0V to ±14.5V &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Voltage bias reject. Fixed rejection voltage  F= 0V to Â±14.5V &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <item>
                <property name="text">
@@ -1391,7 +1125,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Current bias reject . Fixed rejection current F= 0A to ±2A&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Current bias reject . Fixed rejection current F= 0A to Â±2A&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <item>
                <property name="text">
@@ -1604,7 +1338,7 @@
               </item>
               <item>
                <property name="text">
-                <string>×10</string>
+                <string>Ã—10</string>
                </property>
               </item>
              </widget>
@@ -1624,7 +1358,7 @@
               </item>
               <item>
                <property name="text">
-                <string>×10</string>
+                <string>Ã—10</string>
                </property>
               </item>
              </widget>
@@ -1668,7 +1402,7 @@
               </item>
               <item>
                <property name="text">
-                <string>×10</string>
+                <string>Ã—10</string>
                </property>
               </item>
              </widget>
@@ -1734,7 +1468,7 @@
               </item>
               <item>
                <property name="text">
-                <string>×10</string>
+                <string>Ã—10</string>
                </property>
               </item>
              </widget>
@@ -2453,6 +2187,9 @@
             </item>
             <item row="3" column="0">
              <spacer name="horizontalSpacer_13">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>40</width>
@@ -2465,6 +2202,9 @@
           </item>
           <item>
            <spacer name="horizontalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
             <property name="sizeHint" stdset="0">
              <size>
               <width>40</width>
@@ -2552,22 +2292,22 @@
               </property>
               <item>
                <property name="text">
-                <string>5×9</string>
+                <string>5x9</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>4×9 (50Hz AC Supply)</string>
+                <string>4x9 (50Hz AC Supply)</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>4×9 (60Hz AC Supply)</string>
+                <string>4x9 (60Hz AC Supply)</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>3×9</string>
+                <string>3x9</string>
                </property>
               </item>
              </widget>
@@ -2616,6 +2356,9 @@
             </item>
             <item row="7" column="1">
              <spacer name="verticalSpacer_13">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -2737,12 +2480,12 @@
               </item>
               <item>
                <property name="text">
-                <string>∆RE</string>
+                <string>ΔRE</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>∆RE-Bi</string>
+                <string>ΔRE-Bi</string>
                </property>
               </item>
               <item>
@@ -2757,12 +2500,12 @@
               </item>
               <item>
                <property name="text">
-                <string>δ∆RE/δI</string>
+                <string>δΔRE/δI</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>δI/δ∆RE</string>
+                <string>δI/δΔRE</string>
                </property>
               </item>
               <item>
@@ -2772,7 +2515,7 @@
               </item>
               <item>
                <property name="text">
-                <string>∑POL</string>
+                <string>ΣPOL</string>
                </property>
               </item>
               <item>
@@ -2797,6 +2540,9 @@
             </item>
             <item row="5" column="1">
              <spacer name="verticalSpacer_14">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -2846,12 +2592,12 @@
               </item>
               <item>
                <property name="text">
-                <string>∆RE</string>
+                <string>ΔRE</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>∆RE-Bi</string>
+                <string>ΔRE-Bi</string>
                </property>
               </item>
               <item>
@@ -2866,12 +2612,12 @@
               </item>
               <item>
                <property name="text">
-                <string>δ∆RE/δI</string>
+                <string>δΔRE/δI</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>δI/δ∆RE</string>
+                <string>ΔI/δΔRE</string>
                </property>
               </item>
               <item>
@@ -2881,7 +2627,7 @@
               </item>
               <item>
                <property name="text">
-                <string>∑POL</string>
+                <string>ΣPOL</string>
                </property>
               </item>
               <item>
@@ -2956,12 +2702,12 @@
               </item>
               <item>
                <property name="text">
-                <string>∆RE</string>
+                <string>ΔRE</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>∆RE-Bi</string>
+                <string>ΔRE-Bi</string>
                </property>
               </item>
               <item>
@@ -2976,12 +2722,12 @@
               </item>
               <item>
                <property name="text">
-                <string>δ∆RE/δI</string>
+                <string>δΔRE/δI</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>δI/δ∆RE</string>
+                <string>δI/δΔRE</string>
                </property>
               </item>
               <item>
@@ -2991,7 +2737,7 @@
               </item>
               <item>
                <property name="text">
-                <string>∑POL</string>
+                <string>ΣPOL</string>
                </property>
               </item>
               <item>
@@ -3013,6 +2759,9 @@
             </item>
             <item row="5" column="1">
              <spacer name="verticalSpacer_15">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
@@ -3049,12 +2798,12 @@
               </item>
               <item>
                <property name="text">
-                <string>∆RE</string>
+                <string>ΔRE</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>∆RE-Bi</string>
+                <string>ΔRE-Bi</string>
                </property>
               </item>
               <item>
@@ -3069,12 +2818,12 @@
               </item>
               <item>
                <property name="text">
-                <string>δ∆RE/δI</string>
+                <string>δΔRE/δI</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>δI/δ∆RE</string>
+                <string>δI/δΔRE</string>
                </property>
               </item>
               <item>
@@ -3084,7 +2833,7 @@
               </item>
               <item>
                <property name="text">
-                <string>∑POL</string>
+                <string>ΣPOL</string>
                </property>
               </item>
               <item>
@@ -3222,6 +2971,9 @@
         </item>
         <item>
          <spacer name="verticalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
@@ -3240,129 +2992,161 @@
        <number>10</number>
       </property>
       <item>
-       <widget class="QPushButton" name="startStreamButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
+       <widget class="QFrame" name="plotFrame">
         <property name="minimumSize">
          <size>
-          <width>100</width>
-          <height>50</height>
+          <width>0</width>
+          <height>260</height>
          </size>
         </property>
-        <property name="text">
-         <string>Start Stream</string>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
         </property>
-        <property name="autoDefault">
-         <bool>true</bool>
-        </property>
-        <property name="default">
-         <bool>false</bool>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
+        <layout class="QVBoxLayout" name="plotFrameLayout">
+         <item>
+          <widget class="QLabel" name="plotPlaceholderLabel">
+           <property name="text">
+            <string>Plot will appear here (chart inserted at runtime)</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="stopStreamButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>50</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Stop Stream</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-        <property name="default">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="startSaveToDbButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>50</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Save Data</string>
-        </property>
-        <property name="autoDefault">
-         <bool>true</bool>
-        </property>
-        <property name="default">
-         <bool>false</bool>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="stopSaveToDbButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>50</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Stop Saving</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-        <property name="default">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_12">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       <layout class="QVBoxLayout" name="streamButtonsLayout">
+        <item>
+         <widget class="QPushButton" name="startStreamButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Start Stream</string>
+          </property>
+          <property name="autoDefault">
+           <bool>true</bool>
+          </property>
+          <property name="default">
+           <bool>false</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="stopStreamButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Stop Stream</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+          <property name="default">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="startSaveToDbButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Save Data</string>
+          </property>
+          <property name="autoDefault">
+           <bool>true</bool>
+          </property>
+          <property name="default">
+           <bool>false</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="stopSaveToDbButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Stop Saving</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+          <property name="default">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="exportPlotButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Export Plot</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+          <property name="default">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_streamButtons">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
      </layout>
-    </item>
-    <item>
-     <widget class="QFrame" name="plotFrame">
-      <property name="frameShape">
-       <enum>QFrame::NoFrame</enum>
-      </property>
-      <layout class="QVBoxLayout" name="plotFrameLayout">
-       <item>
-        <widget class="QLabel" name="plotPlaceholderLabel">
-         <property name="text">
-          <string>Plot will appear here (pyqtgraph inserted at runtime)</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
     </item>
     <item>
      <widget class="QPlainTextEdit" name="logText">
