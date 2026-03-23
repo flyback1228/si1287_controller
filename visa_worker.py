@@ -334,20 +334,30 @@ class VisaWorker(QtCore.QObject):
     #     except Exception as e:
     #         self._log(f"Apply setup failed: {e}")
 
-    @QtCore.pyqtSlot()
-    def start_stream(self):
+    @QtCore.pyqtSlot(int,int)
+    def start_stream(self,x_ax: int,y_ax: int):
         try:
             self._ensure_connected()
             self._t0 = time.time()
             self._streaming = False
 
             # Put the SI1287 into a known-good measurement state before graph output.
-            setup_cmds = ["CE", "DG0", "RG0", "TR1", "DC0", "AV0", "NU0", "RU1", "PX3", "PY5"]
+            # setup_cmds = ["CE", "DG0", "RG0", "TR1", "DC0", "AV0", "NU0", "RU1"]
+            setup_cmds = ["CE", "TR1", "RU1"]
             for cmd in setup_cmds:
                 code = self._write_and_check_error(cmd)
                 if code not in (None, 0):
                     self._log(f"Start stream aborted during setup command {cmd!r}.")
                     return
+                
+            code = self._write_and_check_error(f"PX{x_ax}")
+            if code not in (None, 0):
+                self._log(f"Start stream aborted while setting X axis to {x_ax}.")
+                return
+            code = self._write_and_check_error(f"PY{y_ax}")
+            if code not in (None, 0):
+                self._log(f"Start stream aborted while setting Y axis to {y_ax}.")
+                return
 
             code = self._write_and_check_error("GP0", delay_s=0.1)
             if code not in (None, 0):

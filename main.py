@@ -228,7 +228,7 @@ class MainWindow(QtWidgets.QMainWindow):
     connectRequested = QtCore.pyqtSignal(str)
     disconnectRequested = QtCore.pyqtSignal()
     # applySetupRequested = QtCore.pyqtSignal(list)
-    startStreamRequested = QtCore.pyqtSignal()
+    startStreamRequested = QtCore.pyqtSignal(int,int)
     stopStreamRequested = QtCore.pyqtSignal()
     startPolarizationRequested = QtCore.pyqtSignal()
     stopPolarizationRequested = QtCore.pyqtSignal()
@@ -580,9 +580,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # outputs before GP1 asks it to stream readings.
         self.configurationChanged.emit("TR", self.measurementTriggerCombo.currentIndex())
         self.configurationChanged.emit("RU", self.digitalVolmeterCombo.currentIndex())
-        self.configurationChanged.emit("PX", self.outputXCombo.currentIndex())
-        self.configurationChanged.emit("PY", self.outputYCombo.currentIndex())
-        self.startStreamRequested.emit()
+        # self.configurationChanged.emit("PX", self.outputXCombo.currentIndex())
+        # self.configurationChanged.emit("PY", self.outputYCombo.currentIndex())
+        self.startStreamRequested.emit(self.outputXCombo.currentIndex(), self.outputYCombo.currentIndex())
         self.startStreamButton.setEnabled(False)
         self.stopStreamButton.setEnabled(True)
 
@@ -881,7 +881,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if(self.standby_mode < 0):
             self.append_log("Set Standby Mode before setting DC Potential")
             return
-        self.configurationChanged.emit("PV", value)
+        if(self.polarzation_mode==0):
+            self.configurationChanged.emit("PV", value)
+        else:
+            self.configurationChanged.emit("PC", value)
         
     @QtCore.pyqtSlot(int)
     def bandwidth_combo_index_changed(self, idx:int):
