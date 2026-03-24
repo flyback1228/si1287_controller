@@ -1338,7 +1338,7 @@
               </item>
               <item>
                <property name="text">
-                <string>Ã—10</string>
+                <string>x10</string>
                </property>
               </item>
              </widget>
@@ -1358,7 +1358,7 @@
               </item>
               <item>
                <property name="text">
-                <string>Ã—10</string>
+                <string>x10</string>
                </property>
               </item>
              </widget>
@@ -1374,841 +1374,6 @@
              <size>
               <width>20</width>
               <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab_7">
-         <attribute name="title">
-          <string>Sweep</string>
-         </attribute>
-         <layout class="QHBoxLayout" name="horizontalLayout_9">
-          <item>
-           <layout class="QGridLayout" name="gridLayout_10">
-            <item row="4" column="1">
-             <widget class="QComboBox" name="sweepVoltageAmplificationCombo">
-              <property name="minimumSize">
-               <size>
-                <width>200</width>
-                <height>0</height>
-               </size>
-              </property>
-              <item>
-               <property name="text">
-                <string>Off</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Ã—10</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QComboBox" name="offModeCombo">
-              <property name="minimumSize">
-               <size>
-                <width>200</width>
-                <height>0</height>
-               </size>
-              </property>
-              <item>
-               <property name="text">
-                <string>Standby</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Freeze</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="labelResource_43">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Number of Segments</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="labelResource_38">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Off Mode</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <widget class="QComboBox" name="sweepCurrentAmplificationCombo">
-              <property name="minimumSize">
-               <size>
-                <width>200</width>
-                <height>0</height>
-               </size>
-              </property>
-              <item>
-               <property name="text">
-                <string>Off</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Ã—10</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QSpinBox" name="numberOfSegmentSpin">
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>99999</number>
-              </property>
-              <property name="value">
-               <number>2</number>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="labelResource_45">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Voltage Amplification</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="labelResource_39">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Current Amplification</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QSpinBox" name="delaySpin">
-              <property name="maximum">
-               <number>100000</number>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="labelResource_44">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Filter:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QComboBox" name="sweepFilterCombo">
-              <property name="minimumSize">
-               <size>
-                <width>200</width>
-                <height>0</height>
-               </size>
-              </property>
-              <item>
-               <property name="text">
-                <string>On</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Off</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="labelResource_40">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Delay(s)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <spacer name="verticalSpacer_9">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
-            <property name="leftMargin">
-             <number>10</number>
-            </property>
-            <item>
-             <layout class="QGridLayout" name="gridLayout_13">
-              <item row="3" column="2">
-               <widget class="QDoubleSpinBox" name="speedSweepCurrent2Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="6" column="1">
-               <widget class="QDoubleSpinBox" name="speedSweepCurrentStepSpin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QDoubleSpinBox" name="speedSweepVoltage1Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="labelResource_66">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Voltage(V)</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="4">
-               <widget class="QDoubleSpinBox" name="speedSweepVoltage4Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="3">
-               <widget class="QDoubleSpinBox" name="speedSweepCurrent3Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="labelResource_61">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Current(A)</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="0">
-               <widget class="QLabel" name="labelResource_68">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Voltage Step</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="1">
-               <widget class="QDoubleSpinBox" name="speedSweepVoltageStepSpin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QLabel" name="labelResource_60">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 2</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="labelResource_63">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 1</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="3">
-               <widget class="QDoubleSpinBox" name="speedSweepVoltage3Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="3">
-               <widget class="QLabel" name="labelResource_65">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 3</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="labelResource_64">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Time Step</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0" colspan="5">
-               <widget class="QLabel" name="labelResource_62">
-                <property name="minimumSize">
-                 <size>
-                  <width>150</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Stepped Sweep</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
-               <widget class="QDoubleSpinBox" name="speedSweepVoltage2Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="6" column="0">
-               <widget class="QLabel" name="labelResource_69">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Current Step</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="4">
-               <widget class="QLabel" name="labelResource_67">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 4</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="4">
-               <widget class="QDoubleSpinBox" name="speedSweepCurrent4Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QDoubleSpinBox" name="speedSweepTime1Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QDoubleSpinBox" name="speedSweepCurrent1Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QGridLayout" name="gridLayout_11">
-              <item row="1" column="3">
-               <widget class="QLabel" name="labelResource_52">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 3</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="4">
-               <widget class="QLabel" name="labelResource_53">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 4</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="labelResource_42">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Voltage(V)</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="3">
-               <widget class="QDoubleSpinBox" name="rampSweepTime3Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
-               <widget class="QDoubleSpinBox" name="rampSweepVoltage2Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="labelResource_41">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Sgement Time(s)</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="4">
-               <widget class="QDoubleSpinBox" name="rampSweepCurrent4Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QDoubleSpinBox" name="rampSweepTime1Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="2">
-               <widget class="QDoubleSpinBox" name="rampSweepCurrent2Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="labelResource_50">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 1</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QDoubleSpinBox" name="rampSweepVoltage1Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QLabel" name="labelResource_51">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Segment 2</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="labelResource_47">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Current(A)</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="2">
-               <widget class="QDoubleSpinBox" name="rampSweepTime2Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="3">
-               <widget class="QDoubleSpinBox" name="rampSweepCurrent3Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="3">
-               <widget class="QDoubleSpinBox" name="rampSweepVoltage3Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="4">
-               <widget class="QDoubleSpinBox" name="rampSweepVoltage4Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>14.500000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0" colspan="5">
-               <widget class="QLabel" name="labelResource_54">
-                <property name="minimumSize">
-                 <size>
-                  <width>150</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Ramp Sweep</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="4">
-               <widget class="QDoubleSpinBox" name="rampSweepTime4Spin">
-                <property name="minimum">
-                 <double>-14.500000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QDoubleSpinBox" name="rampSweepCurrent1Spin">
-                <property name="minimum">
-                 <double>-2.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>2.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="2">
-               <spacer name="verticalSpacer_7">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QGridLayout" name="gridLayout_20">
-            <item row="1" column="0">
-             <widget class="QPushButton" name="sweepRampButton">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Ramp Sweep</string>
-              </property>
-              <property name="autoDefault">
-               <bool>false</bool>
-              </property>
-              <property name="default">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="sweepStepButton">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Step Sweep</string>
-              </property>
-              <property name="autoDefault">
-               <bool>false</bool>
-              </property>
-              <property name="default">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="sweepStatusButton">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Sweep Status</string>
-              </property>
-              <property name="autoDefault">
-               <bool>false</bool>
-              </property>
-              <property name="default">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <spacer name="horizontalSpacer_13">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_8">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
              </size>
             </property>
            </spacer>
@@ -2445,215 +1610,6 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_9">
-         <attribute name="title">
-          <string>Output Parameter</string>
-         </attribute>
-         <layout class="QHBoxLayout" name="horizontalLayout_12">
-          <item>
-           <layout class="QGridLayout" name="gridLayout_15">
-            <item row="0" column="1">
-             <widget class="QComboBox" name="outputXCombo">
-              <property name="minimumSize">
-               <size>
-                <width>200</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="currentText">
-               <string>CE</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>CE</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>RE1</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>RE2</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ΔRE</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ΔRE-Bi</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>I</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>I-Bi</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>δΔRE/δI</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>δI/δΔRE</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>POL</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ΣPOL</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>DVM</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="labelResource_74">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Y axis</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <spacer name="verticalSpacer_14">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="labelResource_75">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>X axis</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QComboBox" name="outputYCombo">
-              <property name="minimumSize">
-               <size>
-                <width>200</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="currentText">
-               <string>CE</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>CE</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>RE1</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>RE2</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ΔRE</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ΔRE-Bi</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>I</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>I-Bi</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>δΔRE/δI</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ΔI/δΔRE</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>POL</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>ΣPOL</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>DVM</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_9">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
         <widget class="QWidget" name="tab_10">
          <attribute name="title">
           <string>Display</string>
@@ -2661,7 +1617,7 @@
          <layout class="QHBoxLayout" name="horizontalLayout_13">
           <item>
            <layout class="QGridLayout" name="gridLayout_18">
-            <item row="0" column="0">
+            <item row="1" column="0">
              <widget class="QLabel" name="labelResource_77">
               <property name="minimumSize">
                <size>
@@ -2674,7 +1630,7 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
+            <item row="2" column="1">
              <widget class="QComboBox" name="displayRightCombo">
               <property name="minimumSize">
                <size>
@@ -2757,20 +1713,20 @@
               </item>
              </widget>
             </item>
-            <item row="5" column="1">
-             <spacer name="verticalSpacer_15">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelResource_76">
+              <property name="minimumSize">
                <size>
-                <width>20</width>
-                <height>40</height>
+                <width>150</width>
+                <height>0</height>
                </size>
               </property>
-             </spacer>
+              <property name="text">
+               <string>RHS</string>
+              </property>
+             </widget>
             </item>
-            <item row="0" column="1">
+            <item row="1" column="1">
              <widget class="QComboBox" name="displayLeftCombo">
               <property name="minimumSize">
                <size>
@@ -2853,8 +1809,21 @@
               </item>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="labelResource_76">
+            <item row="6" column="1">
+             <spacer name="verticalSpacer_15">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0" colspan="2">
+             <widget class="QLabel" name="labelResource_78">
               <property name="minimumSize">
                <size>
                 <width>150</width>
@@ -2862,7 +1831,10 @@
                </size>
               </property>
               <property name="text">
-               <string>RHS</string>
+               <string>Display On Instrument</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -3129,6 +2101,178 @@
           <property name="default">
            <bool>false</bool>
           </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelResource_75">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Left Y Axis</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="outputXCombo">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="currentText">
+           <string>CE</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>CE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RE1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RE2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ΔRE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ΔRE-Bi</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>I</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>I-Bi</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>δΔRE/δI</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>δI/δΔRE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>POL</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ΣPOL</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>DVM</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelResource_74">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Right Y axis</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="outputYCombo">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="currentText">
+           <string>CE</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>CE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RE1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RE2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ΔRE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ΔRE-Bi</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>I</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>I-Bi</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>δΔRE/δI</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ΔI/δΔRE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>POL</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ΣPOL</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>DVM</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>

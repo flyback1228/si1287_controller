@@ -2,6 +2,7 @@
 from functools import partial
 from datetime import datetime
 import math
+from pathlib import Path
 import re
 import sqlite3
 import sys
@@ -12,182 +13,508 @@ import pyvisa
 
 from visa_worker import VisaWorker, Sample
 
+from ramp_sweep_window import RampSweepWindow
 from si1287_setup import Si1287Setup
+from step_sweep_window import StepSweepWindow
 from status_led import StatusLed
 # from qtpy_led import Led
+
+def _theme_arrow_icon_paths():
+    assets_dir = Path(__file__).resolve().parent / "assets"
+    return (
+        (assets_dir / "ubuntu_combo_down.svg").as_posix(),
+        (assets_dir / "ubuntu_spin_up.svg").as_posix(),
+        (assets_dir / "ubuntu_spin_down.svg").as_posix(),
+    )
+
 
 def apply_light_style(app: QtWidgets.QApplication):
     app.setStyle("Fusion")
 
-    qss = """
-    /* ---------- Main window ---------- */
-    QMainWindow {
-        background: #f5f6f8;
+    theme_path = Path(__file__).resolve().parent / "Ubuntu.qss"
+    combo_down_icon, spin_up_icon, spin_down_icon = _theme_arrow_icon_paths()
+    fallback_qss = """
+    QMainWindow, QWidget#centralwidget { background-color: #ececec; }
+    QPlainTextEdit, QFrame#plotFrame, QChartView { background-color: #ffffff; }
+    """
+    override_qss = """
+    QWidget#centralwidget {
+        background-color: #ececec;
     }
-
-    QWidget {
-        font-size: 12px;
-        color: #20242a;
+    QMenuBar {
+        color: rgb(60, 60, 60);
+        background-color: rgb(245, 245, 245);
+        border-bottom: 1px solid rgb(210, 210, 210);
     }
-
-    /* ---------- Group boxes ---------- */
+    QMenuBar::item {
+        color: rgb(60, 60, 60);
+        background-color: transparent;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    QMenuBar::item:selected {
+        color: rgb(30, 30, 30);
+        background-color: rgb(230, 230, 230);
+        border: 1px solid rgb(214, 214, 214);
+    }
+    QMenu {
+        color: rgb(60, 60, 60);
+        background-color: rgb(250, 250, 250);
+        border: 1px solid rgb(214, 214, 214);
+    }
+    QMenu::item {
+        color: rgb(60, 60, 60);
+        padding: 5px 12px 5px 18px;
+    }
+    QMenu::item:selected {
+        color: white;
+        background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
+                                          stop:0 rgba(225, 108, 54, 255),
+                                          stop:1 rgba(246, 134, 86, 255));
+        border: 1px solid rgb(214, 102, 52);
+    }
     QGroupBox {
-        background: #ffffff;
-        border: 1px solid #d7dbe2;
+        background-color: #f7f7f7;
+        border: 1px solid #d0d0d0;
         border-radius: 8px;
-        margin-top: 12px;
+        margin-top: 10px;
         padding: 10px;
     }
-
     QGroupBox::title {
-        subcontrol-origin: margin;
-        subcontrol-position: top left;
         left: 8px;
-        padding: 0 6px;
-        color: #9a4f00;
-        font-weight: bold;
+        padding: 0 4px;
     }
-
-    /* ---------- Buttons ---------- */
-    QPushButton {
-        background: #ffffff;
-        border: 1px solid #cfd5df;
-        border-radius: 6px;
-        padding: 6px 6px;
-        min-height: 16px;
+    QFrame#plotFrame, QPlainTextEdit, QChartView {
+        background-color: #ffffff;
     }
-
-    QPushButton:hover {
-        background: #f1f4f9;
-        border-color: #aab3c2;
+    QPlainTextEdit {
+        color: #3d3d3d;
+        padding: 6px;
     }
-
-    QPushButton:pressed {
-        background: #e7ecf4;
+    QTabWidget {
+        background-color: #ececec;
+        color: #272727;
     }
-
-    QPushButton:disabled {
-        background: #f7f7f7;
-        color: #9aa2af;
-        border-color: #e0e3e8;
-    }
-
-    /* Apply button highlight */
-    QPushButton#applySetupButton:enabled {
-        background: #f57c00;
-        color: white;
-        border-color: #f57c00;
-    }
-
-    QPushButton#applySetupButton:hover:enabled {
-        background: #ff9800;
-    }
-
-    /* ---------- Inputs ---------- */
-    QComboBox,
-    QLineEdit {
-        background: white;
-        border: 1px solid #bfc6d3;
-        border-radius: 6px;
-        padding: 4px 8px;
-        min-height: 24px;
-    }
-
-    /* Spinboxes need explicit styling */
-    QSpinBox, QDoubleSpinBox {
-        background: white;
-        border: 1px solid #bfc6d3;
-        border-radius: 6px;
-        padding-right: 18px;
-        min-height: 24px;
-    }
-
-    QSpinBox::up-button, QDoubleSpinBox::up-button {
-        subcontrol-origin: border;
-        subcontrol-position: top right;
-        width: 16px;
-        border-left: 1px solid #d0d5df;
-        background: #f3f5f9;
-    }
-
-    QSpinBox::down-button, QDoubleSpinBox::down-button {
-        subcontrol-origin: border;
-        subcontrol-position: bottom right;
-        width: 16px;
-        border-left: 1px solid #d0d5df;
-        background: #f3f5f9;
-    }
-
-    QSpinBox::up-button:hover,
-    QSpinBox::down-button:hover,
-    QDoubleSpinBox::up-button:hover,
-    QDoubleSpinBox::down-button:hover {
-        background: #e6ebf5;
-    }
-
-    QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
-        image: none;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-bottom: 6px solid #4a5568;
-    }
-
-    QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
-        image: none;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-top: 6px solid #4a5568;
-    }
-
-    /* ---------- Tabs ---------- */
     QTabWidget::pane {
-        border: 1px solid #d7dbe2;
-        border-radius: 8px;
-        background: white;
+        background-color: #f6f6f6;
     }
-
-    QTabBar::tab {
-        background: #eef1f6;
-        border: 1px solid #d7dbe2;
-        padding: 8px 14px;
-        margin-right: 2px;
-        border-top-left-radius: 6px;
-        border-top-right-radius: 6px;
+    QComboBox {
+        padding-right: 28px;
     }
-
-    QTabBar::tab:selected {
-        background: white;
-        border-bottom: 1px solid white;
-        font-weight: bold;
+    QComboBox::drop-down {
+        subcontrol-origin: padding;
+        subcontrol-position: top right;
+        width: 24px;
+        border-left: 1px solid rgb(214, 214, 214);
+        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
+                                    stop:0 rgba(236, 236, 236, 255),
+                                    stop:1 rgba(255, 255, 255, 255));
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
     }
-
-    QTabBar::tab:hover {
-        background: #e6ebf5;
+    QComboBox::drop-down:hover {
+        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
+                                    stop:0 rgba(246, 134, 86, 255),
+                                    stop:1 rgba(255, 173, 107, 255));
     }
-
-    /* ---------- Tooltips ---------- */
-    QToolTip {
-        background: white;
-        border: 1px solid #cfd5df;
-        padding: 4px;
+    QComboBox::down-arrow {
+        image: url(__COMBO_DOWN_ICON__);
+        width: 10px;
+        height: 6px;
+        margin-right: 7px;
+    }
+    QSpinBox::up-button, QDoubleSpinBox::up-button, QTimeEdit::up-button, QDateEdit::up-button, QDateTimeEdit::up-button {
+        width: 18px;
+        border-left: 1px solid rgb(214, 214, 214);
+        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
+                                    stop:0 rgba(236, 236, 236, 255),
+                                    stop:1 rgba(255, 255, 255, 255));
+        border-top-right-radius: 4px;
+    }
+    QSpinBox::down-button, QDoubleSpinBox::down-button, QTimeEdit::down-button, QDateEdit::down-button, QDateTimeEdit::down-button {
+        width: 18px;
+        border-left: 1px solid rgb(214, 214, 214);
+        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
+                                    stop:0 rgba(236, 236, 236, 255),
+                                    stop:1 rgba(255, 255, 255, 255));
+        border-bottom-right-radius: 4px;
+    }
+    QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover, QTimeEdit::up-button:hover, QDateEdit::up-button:hover, QDateTimeEdit::up-button:hover,
+    QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover, QTimeEdit::down-button:hover, QDateEdit::down-button:hover, QDateTimeEdit::down-button:hover {
+        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
+                                    stop:0 rgba(246, 134, 86, 255),
+                                    stop:1 rgba(255, 173, 107, 255));
+    }
+    QSpinBox::up-arrow, QDoubleSpinBox::up-arrow, QTimeEdit::up-arrow, QDateEdit::up-arrow, QDateTimeEdit::up-arrow {
+        image: url(__SPIN_UP_ICON__);
+        width: 8px;
+        height: 6px;
+    }
+    QSpinBox::down-arrow, QDoubleSpinBox::down-arrow, QTimeEdit::down-arrow, QDateEdit::down-arrow, QDateTimeEdit::down-arrow {
+        image: url(__SPIN_DOWN_ICON__);
+        width: 8px;
+        height: 6px;
+    }
+    QStatusBar {
+        background-color: #ececec;
+        color: #3d3d3d;
     }
     """
+    override_qss = (
+        override_qss
+        .replace("__COMBO_DOWN_ICON__", combo_down_icon)
+        .replace("__SPIN_UP_ICON__", spin_up_icon)
+        .replace("__SPIN_DOWN_ICON__", spin_down_icon)
+    )
 
-    app.setStyleSheet(qss)
+    if theme_path.exists():
+        app.setStyleSheet(theme_path.read_text(encoding="utf-8") + "\n" + override_qss)
+    else:
+        app.setStyleSheet(fallback_qss + "\n" + override_qss)
 
     font = QtGui.QFont("Segoe UI", 10)
     app.setFont(font)
 
 
-DEFAULT_SETUP_CMDS = [
-    "TR1",
-    "RU1",
-    "PX3",
-    "PY5",
-    "OS0",
-    "RH1",
-    "OT1",
-]
+def apply_blue_style(app: QtWidgets.QApplication):
+    app.setStyle("Fusion")
+
+    combo_down_icon, spin_up_icon, spin_down_icon = _theme_arrow_icon_paths()
+    qss = """
+    QMainWindow {
+        background: #f0f2f5;
+    }
+
+    QWidget {
+        background: #f0f2f5;
+        color: #1c1e21;
+        font-size: 12px;
+        selection-background-color: #dbe7ff;
+        selection-color: #1c1e21;
+    }
+
+    QWidget#centralwidget {
+        background: #f0f2f5;
+    }
+
+    QMenuBar {
+        background: #ffffff;
+        border-bottom: 1px solid #d8dde6;
+        padding: 6px 10px;
+    }
+
+    QMenuBar::item {
+        background: transparent;
+        border-radius: 8px;
+        padding: 6px 10px;
+    }
+
+    QMenuBar::item:selected {
+        background: #eef3ff;
+        color: #1877f2;
+    }
+
+    QMenu {
+        background: #ffffff;
+        border: 1px solid #d8dde6;
+        border-radius: 10px;
+        padding: 8px;
+    }
+
+    QMenu::item {
+        border-radius: 8px;
+        padding: 8px 26px 8px 12px;
+    }
+
+    QMenu::item:selected {
+        background: #eef3ff;
+        color: #1877f2;
+    }
+
+    QStatusBar {
+        background: #ffffff;
+        border-top: 1px solid #d8dde6;
+        color: #606770;
+    }
+
+    QLabel {
+        color: #1c1e21;
+    }
+
+    QGroupBox {
+        background: #ffffff;
+        border: 1px solid #d8dde6;
+        border-radius: 12px;
+        margin-top: 16px;
+        padding: 14px;
+    }
+
+    QGroupBox::title {
+        subcontrol-origin: margin;
+        subcontrol-position: top left;
+        left: 12px;
+        padding: 0 8px;
+        color: #65676b;
+        font-weight: 600;
+    }
+
+    QPushButton {
+        background: #e4e6eb;
+        color: #050505;
+        border: 1px solid #d8dde6;
+        border-radius: 10px;
+        padding: 8px 14px;
+        min-height: 18px;
+        font-weight: 600;
+    }
+
+    QPushButton:hover {
+        background: #d8dadf;
+        border-color: #cfd4dd;
+    }
+
+    QPushButton:pressed {
+        background: #ccd0d5;
+    }
+
+    QPushButton:disabled {
+        background: #f0f2f5;
+        color: #bcc0c4;
+        border-color: #e4e6eb;
+    }
+
+    QPushButton[fbRole="primary"] {
+        background: #1877f2;
+        color: white;
+        border-color: #1877f2;
+    }
+
+    QPushButton[fbRole="primary"]:hover {
+        background: #166fe5;
+        border-color: #166fe5;
+    }
+
+    QPushButton[fbRole="primary"]:pressed {
+        background: #1464d6;
+        border-color: #1464d6;
+    }
+
+    QPushButton[fbRole="danger"] {
+        background: #ffffff;
+        color: #d93025;
+        border-color: #f1b9b4;
+    }
+
+    QPushButton[fbRole="danger"]:hover {
+        background: #fff1f0;
+        border-color: #e59b94;
+    }
+
+    QComboBox,
+    QLineEdit {
+        background: #ffffff;
+        border: 1px solid #bcc5d3;
+        border-radius: 8px;
+        padding: 6px 10px;
+        min-height: 28px;
+        color: #1c1e21;
+    }
+
+    QSpinBox, QDoubleSpinBox {
+        background: #ffffff;
+        border: 1px solid #bcc5d3;
+        border-radius: 8px;
+        padding-left: 10px;
+        padding-right: 28px;
+        min-height: 28px;
+        color: #1c1e21;
+    }
+
+    QComboBox:hover,
+    QLineEdit:hover,
+    QSpinBox:hover,
+    QDoubleSpinBox:hover {
+        border-color: #8ea0b8;
+        background: #ffffff;
+    }
+
+    QComboBox:focus,
+    QLineEdit:focus,
+    QSpinBox:focus,
+    QDoubleSpinBox:focus {
+        background: #ffffff;
+        border: 1px solid #1877f2;
+    }
+
+    QComboBox {
+        padding-right: 30px;
+    }
+
+    QComboBox::drop-down {
+        subcontrol-origin: padding;
+        subcontrol-position: top right;
+        width: 24px;
+        border: none;
+        border-left: 1px solid #d8dde6;
+        background: #f7f8fa;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    QComboBox::drop-down:hover {
+        background: #eef3ff;
+    }
+
+    QComboBox::down-arrow {
+        image: url(__COMBO_DOWN_ICON__);
+        width: 10px;
+        height: 6px;
+        margin-right: 7px;
+    }
+
+    QComboBox QAbstractItemView {
+        background: #ffffff;
+        color: #1c1e21;
+        border: 1px solid #c7cfdb;
+        border-radius: 8px;
+        padding: 4px;
+        selection-background-color: #eaf2ff;
+        selection-color: #1c1e21;
+        outline: 0;
+    }
+
+    QSpinBox::up-button, QDoubleSpinBox::up-button {
+        subcontrol-origin: border;
+        subcontrol-position: top right;
+        width: 18px;
+        border: none;
+        border-left: 1px solid #d8dde6;
+        background: #f7f8fa;
+        border-top-right-radius: 8px;
+    }
+
+    QSpinBox::down-button, QDoubleSpinBox::down-button {
+        subcontrol-origin: border;
+        subcontrol-position: bottom right;
+        width: 18px;
+        border: none;
+        border-left: 1px solid #d8dde6;
+        background: #f7f8fa;
+        border-bottom-right-radius: 8px;
+    }
+
+    QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
+    QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {
+        background: #eef3ff;
+    }
+
+    QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+        image: url(__SPIN_UP_ICON__);
+        width: 8px;
+        height: 6px;
+    }
+
+    QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+        image: url(__SPIN_DOWN_ICON__);
+        width: 8px;
+        height: 6px;
+    }
+
+    QComboBox:disabled,
+    QLineEdit:disabled,
+    QSpinBox:disabled,
+    QDoubleSpinBox:disabled {
+        background: #f5f6f7;
+        color: #9aa1ac;
+        border-color: #d9dee7;
+    }
+
+    QTabWidget::pane {
+        border: 1px solid #d8dde6;
+        border-radius: 12px;
+        background: #ffffff;
+        top: -1px;
+    }
+
+    QTabBar::tab {
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #65676b;
+        padding: 10px 16px;
+        margin-right: 2px;
+        font-weight: 600;
+    }
+
+    QTabBar::tab:selected {
+        color: #1877f2;
+        border-bottom-color: #1877f2;
+    }
+
+    QTabBar::tab:hover {
+        background: #f2f4f7;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    QFrame#plotFrame,
+    QPlainTextEdit,
+    QChartView {
+        background: #ffffff;
+        border: 1px solid #d8dde6;
+        border-radius: 12px;
+    }
+
+    QPlainTextEdit {
+        color: #1c1e21;
+        padding: 8px;
+        selection-background-color: #dbe7ff;
+    }
+
+    QScrollBar:vertical {
+        background: transparent;
+        width: 12px;
+        margin: 6px 2px 6px 2px;
+    }
+
+    QScrollBar::handle:vertical {
+        background: #c9ccd1;
+        border-radius: 6px;
+        min-height: 28px;
+    }
+
+    QScrollBar::handle:vertical:hover {
+        background: #b4b8bf;
+    }
+
+    QScrollBar::add-line:vertical,
+    QScrollBar::sub-line:vertical,
+    QScrollBar::add-page:vertical,
+    QScrollBar::sub-page:vertical {
+        background: none;
+        border: none;
+        height: 0px;
+    }
+
+    QToolTip {
+        background: #ffffff;
+        color: #1c1e21;
+        border: 1px solid #ccd0d5;
+        border-radius: 8px;
+        padding: 6px 8px;
+    }
+    """
+    qss = (
+        qss
+        .replace("__COMBO_DOWN_ICON__", combo_down_icon)
+        .replace("__SPIN_UP_ICON__", spin_up_icon)
+        .replace("__SPIN_DOWN_ICON__", spin_down_icon)
+    )
+
+    app.setStyleSheet(qss)
+    app.setFont(QtGui.QFont("Segoe UI", 10))
+
+
 
 
 def create_app_icon() -> QtGui.QIcon:
@@ -199,10 +526,10 @@ def create_app_icon() -> QtGui.QIcon:
         p = QtGui.QPainter(pix)
         p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
 
-        # Rounded blue tile aligned with the app's light-blue accent.
+        # Rounded tile aligned with the Facebook-inspired accent color.
         rect = QtCore.QRectF(1, 1, size - 2, size - 2)
         p.setPen(QtCore.Qt.PenStyle.NoPen)
-        p.setBrush(QtGui.QColor("#f57c00"))
+        p.setBrush(QtGui.QColor("#1877f2"))
         p.drawRoundedRect(rect, size * 0.22, size * 0.22)
 
         # White trace line to suggest measurement/plot behavior.
@@ -265,18 +592,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().addPermanentWidget(self.errorLed)
         self.errorLed.set_connected(False)
 
+        self.sweepLed = StatusLed(14)
+        self.sweepStatusLabel = QtWidgets.QLabel("Idle")
+        self.statusBar().addPermanentWidget(QtWidgets.QLabel("Sweep:"))
+        self.statusBar().addPermanentWidget(self.sweepLed)
+        self.statusBar().addPermanentWidget(self.sweepStatusLabel)
+        self.sweepLed.set_connected(False)
+        self._apply_facebook_widget_roles()
+
         # -------- Plot --------
         self.chart = QtCharts.QChart()
         self.chart.legend().setVisible(True)
         self.chart.setBackgroundVisible(False)
+        self.chart.setMargins(QtCore.QMargins(16, 16, 16, 16))
 
         self.seriesA = QtCharts.QLineSeries()
         self.seriesA.setName("A")
-        self.seriesA.setColor(QtGui.QColor("#f57c00"))
+        self.seriesA.setColor(QtGui.QColor("#1877f2"))
 
         self.seriesB = QtCharts.QLineSeries()
         self.seriesB.setName("B")
-        self.seriesB.setColor(QtGui.QColor("#d62728"))
+        self.seriesB.setColor(QtGui.QColor("#42b72a"))
 
         self.chart.addSeries(self.seriesA)
         self.chart.addSeries(self.seriesB)
@@ -308,6 +644,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plotWidget.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         self.plotFrameLayout.addWidget(self.plotWidget)
         self.plotPlaceholderLabel.hide()
+        self._apply_chart_theme()
 
         self.t: List[float] = []
         self.a: List[float] = []
@@ -320,6 +657,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._db_path = "si1287_data.db"
         self._db_table_name = ""
         self._saving_to_db = False
+        self._log_db_conn: sqlite3.Connection | None = None
+        self._log_db_cursor: sqlite3.Cursor | None = None
+        self._log_db_ready = False
 
         # -------- Setup text --------
         # if not self.setupText.toPlainText().strip():
@@ -450,13 +790,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.voltageAmplificationCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("VX", idx))
         self.currentAmplificationCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("IX", idx))
         
-        # 6.13 SWEEP Definition
-        self.offModeCombo.currentIndexChanged.connect(self.sweep_off_mode_combo_index_changed)
-        # self.sweepStandbyButton.clicked.connect(lambda: self.configurationChanged("SW",0))
-        self.sweepStepButton.clicked.connect(self.sweep_step_button_clicked)
-        self.sweepRampButton.clicked.connect(self.sweep_ramp_button_clicked)
-        self.sweepStatusButton.clicked.connect(lambda: self.configurationChanged.emit("?ST", None))
-        
         # 6.16 DVM Control Functions
         self.numberOfDigitsCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("DG", idx))
         self.inputRangeCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RG", idx))
@@ -497,6 +830,44 @@ class MainWindow(QtWidgets.QMainWindow):
         # self._set_controls_enabled(False)
         # self.disconnectButton.setEnabled(False)
         self.stopSaveToDbButton.setEnabled(False)
+        self._step_sweep_values = {
+            "off_mode": 0,
+            "delay": 0,
+            "segments": 2,
+            "v1": 0.0,
+            "v2": 0.0,
+            "v3": 0.0,
+            "v4": 0.0,
+            "time": 0.0,
+            "v_step": 0.0,
+        }
+        self._ramp_sweep_values = {
+            "off_mode": 0,
+            "delay": 0,
+            "segments": 2,
+            "filter": 0,
+            "v1": 0.0,
+            "v2": 0.0,
+            "v3": 0.0,
+            "v4": 0.0,
+            "t1": 0.0,
+            "t2": 0.0,
+            "t3": 0.0,
+            "t4": 0.0,
+        }
+        self._sweep_running = False
+        self._active_sweep_type: str | None = None
+        self.stepSweepDialog = StepSweepWindow(self)
+        self.stepSweepDialog.runButton.clicked.connect(self._start_step_sweep_from_dialog)
+        self.stepSweepDialog.runButton_2.clicked.connect(self.stop_sweep_action_clicked)
+        self.stepSweepDialog.load_from_values(self._step_sweep_values)
+        self.stepSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
+        self.rampSweepDialog = RampSweepWindow(self)
+        self.rampSweepDialog.startRampSweep.clicked.connect(self._start_ramp_sweep_from_dialog)
+        self.rampSweepDialog.runRampSweep.clicked.connect(self.stop_sweep_action_clicked)
+        self.rampSweepDialog.load_from_values(self._ramp_sweep_values)
+        self.rampSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
+        self._set_sweep_dialogs_running(False)
 
     # ---------------- VISA enumeration ----------------
     def _populate_visa_resources(self):
@@ -529,7 +900,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # ---------------- UI handlers ----------------
     def closeEvent(self, event):
+        if not self._allow_disconnect_or_exit():
+            event.ignore()
+            return
+
         self._stop_db_session()
+        self._close_log_db()
         try:
             self.disconnectRequested.emit()
         except Exception:
@@ -547,6 +923,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread.wait(2000)
         super().closeEvent(event)
 
+    def _allow_disconnect_or_exit(self) -> bool:
+        if not self._polarization_on:
+            return True
+
+        msg = "Stop polarization before disconnecting or exiting the program."
+        self.append_log(msg)
+        QtWidgets.QMessageBox.warning(self, "Polarization Active", msg)
+        return False
+
     def _connect_clicked(self):
         if not self.resourceCombo.isEnabled():
             return
@@ -555,7 +940,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connectRequested.emit(res)
         
     def _close_clicked(self):
-       
+        if not self._allow_disconnect_or_exit():
+            return
         self.disconnectRequested.emit()
 
     # def _apply_setup_clicked(self):
@@ -622,6 +1008,45 @@ class MainWindow(QtWidgets.QMainWindow):
         self._saving_to_db = False
         self.startSaveToDbButton.setEnabled(True)
         self.stopSaveToDbButton.setEnabled(False)
+
+    def _ensure_log_db(self) -> bool:
+        if self._log_db_ready and self._log_db_conn is not None and self._log_db_cursor is not None:
+            return True
+
+        try:
+            self._log_db_conn = sqlite3.connect(self._db_path)
+            self._log_db_cursor = self._log_db_conn.cursor()
+            self._log_db_cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS app_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    current_time TEXT NOT NULL,
+                    message TEXT NOT NULL
+                )
+                """
+            )
+            self._log_db_conn.commit()
+            self._log_db_ready = True
+            return True
+        except Exception:
+            self._log_db_conn = None
+            self._log_db_cursor = None
+            self._log_db_ready = False
+            return False
+
+    def _close_log_db(self):
+        if self._log_db_conn is not None:
+            try:
+                self._log_db_conn.commit()
+            except Exception:
+                pass
+            try:
+                self._log_db_conn.close()
+            except Exception:
+                pass
+        self._log_db_conn = None
+        self._log_db_cursor = None
+        self._log_db_ready = False
 
     def _start_save_to_db_clicked(self):
         # if not self._polarization_on:
@@ -728,7 +1153,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self._set_controls_enabled(ok)
         self.connectButton.setEnabled(not ok)
         self.refreshButton.setEnabled(not ok)
-        self.closeButton.setEnabled(ok)
+        self.closeButton.setEnabled(ok and not self._polarization_on)
         self.applySetupButton.setEnabled(ok)
         self.actionInstrumentStatus.setEnabled(ok)
         self.actionLastError.setEnabled(ok)
@@ -742,10 +1167,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionResultRAM.setEnabled(ok)
         self.actionResultROM.setEnabled(ok)
         self.actionResultTimer.setEnabled(ok)
-        # self.sweepStandbyButton.setEnabled(ok)
-        # self.sweepStartButton.setEnabled(ok)
-        self.sweepStepButton.setEnabled(ok)
-        
         if ok:
             self.stopStreamButton.setEnabled(False)
             self.startStreamButton.setEnabled(True)
@@ -762,6 +1183,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_polarization_changed(self, ok: bool):
         self._polarization_on = ok
         self.polarizationLed.set_connected(ok)
+        self.closeButton.setEnabled(self._is_connected and not ok)
         if not ok and self._saving_to_db:
             table_name = self._db_table_name
             self._stop_db_session()
@@ -852,9 +1274,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(str)
     def append_log(self, s: str):
-        self.logText.appendPlainText(s)
+        now = datetime.now()
+        display_stamp = now.strftime("%H:%M:%S")
+        db_stamp = now.strftime("%Y-%m-%d %H:%M:%S")
+        self.logText.appendPlainText(f"[{display_stamp}] {s}")
         sb = self.logText.verticalScrollBar()
         sb.setValue(sb.maximum())
+        if self._ensure_log_db():
+            try:
+                self._log_db_cursor.execute(
+                    "INSERT INTO app_log (current_time, message) VALUES (?, ?)",
+                    (db_stamp, s),
+                )
+                self._log_db_conn.commit()
+            except Exception:
+                self._close_log_db()
 
     def _update_polarization_value_label(self, idx: int):
         if idx == 1:
@@ -866,6 +1300,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def polarization_mode_combo_index_changed(self, idx: int):
         self.polarzation_mode = idx
         self._update_polarization_value_label(idx)
+        self.stepSweepDialog.set_polarization_mode(idx)
+        self.rampSweepDialog.set_polarization_mode(idx)
         self.configurationChanged.emit("PO", idx)
         
     @QtCore.pyqtSlot(int)
@@ -970,58 +1406,161 @@ class MainWindow(QtWidgets.QMainWindow):
             
     @QtCore.pyqtSlot(int)
     def sweep_off_mode_combo_index_changed(self,idx:int):
-        if idx == 0:
-            self.configurationChanged.emit("OF", 0)
-            # self.sweepStandbyButton.setText("Sweep Standby")
-            self.sweetRampButton.setEnabled(True)
-            self.sweetStepButton.setEnabled(True)
-        elif idx == 1:
-            self.configurationChanged.emit("OF", 1)
-            # self.sweepStandbyButton.setText("Sweep Freeze")
-            self.sweetRampButton.setEnabled(False)
-            self.sweetStepButton.setEnabled(False)
+        if idx in (0, 1):
+            self.configurationChanged.emit("OF", idx)
         self.configurationChanged.emit("SW", 0)
             
     @QtCore.pyqtSlot()
     def sweep_step_button_clicked(self):
-        if self.offModeCombo.currentIndex == 1:
-            self.append_log("Instrument Sweep Mode Freeze")
-        else:
-            self.configurationChanged.emit("DL", self.delaySpin.value)
-            self.configurationChanged.emit("SM",self.numberOfSegmentSpin.value)
-            self.configurationChanged.emit("SA", self.speedSweepVoltage1Spin.value)
-            self.configurationChanged.emit("KA", self.speedSweepCurrent1Spin.value)
-            self.configurationChanged.emit("SB", self.speedSweepVoltage2Spin.value)
-            self.configurationChanged.emit("KB", self.speedSweepCurrent2Spin.value)
-            self.configurationChanged.emit("SC", self.speedSweepVoltage3Spin.value)
-            self.configurationChanged.emit("KC", self.speedSweepCurrent3Spin.value)
-            self.configurationChanged.emit("SD", self.speedSweepVoltage4Spin.value)
-            self.configurationChanged.emit("KD", self.speedSweepCurrent4Spin.value)
-            self.configurationChanged.emit("TE", self.speedSweepTime1Spin.value)
-            self.configurationChanged.emit("VS", self.speedSweepVoltageStepSpin.value)
-            self.configurationChanged.emit("IS", self.speedSweepCurrentStepSpin.value)
-            self.configurationChanged.emit("SW",2)
+        self._start_step_sweep_from_dialog()
             
     @QtCore.pyqtSlot()
     def sweep_ramp_button_clicked(self):
-        if self.offModeCombo.currentIndex == 1:
-            self.append_log("Instrument Sweep Mode Freeze")
+        self._start_ramp_sweep_from_dialog()
+
+    @QtCore.pyqtSlot()
+    def sweep_step_action_clicked(self):
+        if not self._ensure_polarization_mode_selected_for_sweep():
+            return
+        if not self._ensure_sweep_window_allowed("step"):
+            return
+        self._sync_step_sweep_dialog_from_main()
+        self.stepSweepDialog.show()
+        self.stepSweepDialog.raise_()
+        self.stepSweepDialog.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def sweep_ramp_action_clicked(self):
+        if not self._ensure_polarization_mode_selected_for_sweep():
+            return
+        if not self._ensure_sweep_window_allowed("ramp"):
+            return
+        self._sync_ramp_sweep_dialog_from_main()
+        self.rampSweepDialog.show()
+        self.rampSweepDialog.raise_()
+        self.rampSweepDialog.activateWindow()
+    
+
+    @QtCore.pyqtSlot()
+    def sweep_status_action_clicked(self):
+        self.configurationChanged.emit("?ST", None)
+    
+    @QtCore.pyqtSlot()
+    def stop_sweep_action_clicked(self):
+        self.configurationChanged.emit("SW", 0)
+        self._active_sweep_type = None
+        self._set_sweep_dialogs_running(False)
+        self.append_log("Sweep stopped.")
+
+    def _sync_step_sweep_dialog_from_main(self):
+        self.stepSweepDialog.load_from_values(self._step_sweep_values)
+        self.stepSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
+        self.stepSweepDialog.set_sweep_running(self._sweep_running)
+
+    def _sync_ramp_sweep_dialog_from_main(self):
+        self.rampSweepDialog.load_from_values(self._ramp_sweep_values)
+        self.rampSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
+        self.rampSweepDialog.set_sweep_running(self._sweep_running)
+
+    def _set_sweep_dialogs_running(self, running: bool):
+        self._sweep_running = running
+        self.stepSweepDialog.set_sweep_running(running)
+        self.rampSweepDialog.set_sweep_running(running)
+        self.sweepLed.set_connected(running)
+        if running and self._active_sweep_type == "step":
+            self.sweepStatusLabel.setText("Step Running")
+        elif running and self._active_sweep_type == "ramp":
+            self.sweepStatusLabel.setText("Ramp Running")
         else:
-            self.configurationChanged.emit("DL", self.delaySpin.value)
-            self.configurationChanged.emit("SM",self.numberOfSegmentSpin.value)
-            self.configurationChanged.emit("VA", self.rampSweepVoltage1Spin.value)
-            self.configurationChanged.emit("JA", self.rampSweepCurrent1Spin.value)
-            self.configurationChanged.emit("TA", self.rampSweepTime1Spin.value)
-            self.configurationChanged.emit("VB", self.rampSweepVoltage2Spin.value)
-            self.configurationChanged.emit("JB", self.rampSweepCurrent2Spin.value)
-            self.configurationChanged.emit("TB", self.rampSweepTime2Spin.value)
-            self.configurationChanged.emit("VC", self.rampSweepVoltage3Spin.value)
-            self.configurationChanged.emit("JC", self.rampSweepCurrent3Spin.value)
-            self.configurationChanged.emit("TC", self.rampSweepTime3Spin.value)
-            self.configurationChanged.emit("VD", self.rampSweepVoltage4Spin.value)
-            self.configurationChanged.emit("JD", self.rampSweepCurrent4Spin.value)
-            self.configurationChanged.emit("TD", self.rampSweepTime4Spin.value)            
-            self.configurationChanged.emit("SW",1)
+            self.sweepStatusLabel.setText("Idle")
+
+    def _ensure_polarization_mode_selected_for_sweep(self) -> bool:
+        if self.polarizationModeCombo.currentIndex() >= 0:
+            return True
+
+        msg = "Select polarization mode before opening the sweep window."
+        self.append_log(msg)
+        QtWidgets.QMessageBox.warning(self, "Polarization Mode Required", msg)
+        return False
+
+    def _ensure_sweep_window_allowed(self, requested_type: str) -> bool:
+        if not self._sweep_running:
+            return True
+        if self._active_sweep_type == requested_type:
+            return True
+
+        active_name = "Step Sweep" if self._active_sweep_type == "step" else "Ramp Sweep"
+        requested_name = "Step Sweep" if requested_type == "step" else "Ramp Sweep"
+        msg = f"{active_name} is running. Stop it before opening {requested_name}."
+        self.append_log(msg)
+        QtWidgets.QMessageBox.warning(self, "Sweep Active", msg)
+        return False
+
+    def _start_step_sweep_from_dialog(self):
+        dlg = self.stepSweepDialog
+        values = dlg.values()
+        self._step_sweep_values = values
+        if self._sweep_running and self._active_sweep_type == "ramp":
+            self._ensure_sweep_window_allowed("step")
+            return
+        if values["off_mode"] == 1:
+            self.append_log("Instrument Sweep Mode Freeze")
+            return
+
+        self.configurationChanged.emit("OF", values["off_mode"])
+        self.configurationChanged.emit("DL", values["delay"])
+        self.configurationChanged.emit("SM", values["segments"])
+        if self.polarzation_mode == 1:
+            self.configurationChanged.emit("KA", values["v1"])
+            self.configurationChanged.emit("KB", values["v2"])
+            self.configurationChanged.emit("KC", values["v3"])
+            self.configurationChanged.emit("KD", values["v4"])
+            self.configurationChanged.emit("IS", values["v_step"])
+        else:
+            self.configurationChanged.emit("SA", values["v1"])
+            self.configurationChanged.emit("SB", values["v2"])
+            self.configurationChanged.emit("SC", values["v3"])
+            self.configurationChanged.emit("SD", values["v4"])
+            self.configurationChanged.emit("VS", values["v_step"])
+        self.configurationChanged.emit("TE", values["time"])
+        self.configurationChanged.emit("SW", 2)
+        self._active_sweep_type = "step"
+        self._set_sweep_dialogs_running(True)
+        self.append_log("Step sweep started from Step Sweep window.")
+
+    def _start_ramp_sweep_from_dialog(self):
+        dlg = self.rampSweepDialog
+        values = dlg.values()
+        self._ramp_sweep_values = values
+        if self._sweep_running and self._active_sweep_type == "step":
+            self._ensure_sweep_window_allowed("ramp")
+            return
+        if values["off_mode"] == 1:
+            self.append_log("Instrument Sweep Mode Freeze")
+            return
+
+        self.configurationChanged.emit("OF", values["off_mode"])
+        self.configurationChanged.emit("DL", values["delay"])
+        self.configurationChanged.emit("SM", values["segments"])
+        self.configurationChanged.emit("FI", values["filter"])
+        if self.polarzation_mode == 1:
+            self.configurationChanged.emit("JA", values["v1"])
+            self.configurationChanged.emit("JB", values["v2"])
+            self.configurationChanged.emit("JC", values["v3"])
+            self.configurationChanged.emit("JD", values["v4"])
+        else:
+            self.configurationChanged.emit("VA", values["v1"])
+            self.configurationChanged.emit("VB", values["v2"])
+            self.configurationChanged.emit("VC", values["v3"])
+            self.configurationChanged.emit("VD", values["v4"])
+        self.configurationChanged.emit("TA", values["t1"])
+        self.configurationChanged.emit("TB", values["t2"])
+        self.configurationChanged.emit("TC", values["t3"])
+        self.configurationChanged.emit("TD", values["t4"])
+        self.configurationChanged.emit("SW", 1)
+        self._active_sweep_type = "ramp"
+        self._set_sweep_dialogs_running(True)
+        self.append_log("Ramp sweep started from Ramp Sweep window.")
 
     def save_setup(self):
         path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save setup", "", "JSON (*.json)")
@@ -1064,32 +1603,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setup.values["FI"] = self.filterCombo.currentIndex()
         self.setup.values["VX"] = self.voltageAmplificationCombo.currentIndex()
         self.setup.values["IX"] = self.currentAmplificationCombo.currentIndex()
-        self.setup.values["OF"] = self.offModeCombo.currentIndex()
+        self._step_sweep_values = self.stepSweepDialog.values()
+        self._ramp_sweep_values = self.rampSweepDialog.values()
 
-        self.setup.values["DL"] = self.delaySpin.value()
-        self.setup.values["SM"] = self.numberOfSegmentSpin.value()
-        self.setup.values["SA"] = self.speedSweepVoltage1Spin.value()
-        self.setup.values["KA"] = self.speedSweepCurrent1Spin.value()
-        self.setup.values["SB"] = self.speedSweepVoltage2Spin.value()
-        self.setup.values["KB"] = self.speedSweepCurrent2Spin.value()
-        self.setup.values["SC"] = self.speedSweepVoltage3Spin.value()
-        self.setup.values["KD"] = self.speedSweepCurrent4Spin.value()
-        self.setup.values["SD"] = self.speedSweepVoltage4Spin.value()
-        self.setup.values["TE"] = self.speedSweepTime1Spin.value()
-        self.setup.values["VS"] = self.speedSweepVoltageStepSpin.value()
-        self.setup.values["IS"] = self.speedSweepCurrentStepSpin.value()
-        self.setup.values["VA"] = self.rampSweepVoltage1Spin.value()
-        self.setup.values["JA"] = self.rampSweepCurrent1Spin.value()
-        self.setup.values["TA"] = self.rampSweepTime1Spin.value()
-        self.setup.values["VB"] = self.rampSweepVoltage2Spin.value()
-        self.setup.values["JB"] = self.rampSweepCurrent2Spin.value()
-        self.setup.values["TB"] = self.rampSweepTime2Spin.value()
-        self.setup.values["VC"] = self.rampSweepVoltage3Spin.value()
-        self.setup.values["JC"] = self.rampSweepCurrent3Spin.value()
-        self.setup.values["TC"] = self.rampSweepTime3Spin.value()
-        self.setup.values["VD"] = self.rampSweepVoltage4Spin.value()
-        self.setup.values["JD"] = self.rampSweepCurrent4Spin.value()
-        self.setup.values["TD"] = self.rampSweepTime4Spin.value()
+        self.setup.values["OF"] = self._step_sweep_values["off_mode"]
+        self.setup.values["DL"] = self._step_sweep_values["delay"]
+        self.setup.values["SM"] = self._step_sweep_values["segments"]
+        self.setup.values["SA"] = self._step_sweep_values["v1"]
+        self.setup.values["SB"] = self._step_sweep_values["v2"]
+        self.setup.values["SC"] = self._step_sweep_values["v3"]
+        self.setup.values["SD"] = self._step_sweep_values["v4"]
+        self.setup.values["TE"] = self._step_sweep_values["time"]
+        self.setup.values["VS"] = self._step_sweep_values["v_step"]
+
+        self.setup.values["VA"] = self._ramp_sweep_values["v1"]
+        self.setup.values["TA"] = self._ramp_sweep_values["t1"]
+        self.setup.values["VB"] = self._ramp_sweep_values["v2"]
+        self.setup.values["TB"] = self._ramp_sweep_values["t2"]
+        self.setup.values["VC"] = self._ramp_sweep_values["v3"]
+        self.setup.values["TC"] = self._ramp_sweep_values["t3"]
+        self.setup.values["VD"] = self._ramp_sweep_values["v4"]
+        self.setup.values["TD"] = self._ramp_sweep_values["t4"]
+        self.setup.values["FI"] = self._ramp_sweep_values["filter"]
+        self.setup.values["VX"] = self.voltageAmplificationCombo.currentIndex()
+        self.setup.values["IX"] = self.currentAmplificationCombo.currentIndex()
 
         self.setup.values["DG"] = self.numberOfDigitsCombo.currentIndex()
         self.setup.values["RG"] = self.inputRangeCombo.currentIndex()
@@ -1110,6 +1647,41 @@ class MainWindow(QtWidgets.QMainWindow):
         if not path:
             return
         self.setup.load_json(path)
+        self._step_sweep_values.update(
+            {
+                "off_mode": self.setup.values.get("OF", self._step_sweep_values["off_mode"]),
+                "delay": self.setup.values.get("DL", self._step_sweep_values["delay"]),
+                "segments": self.setup.values.get("SM", self._step_sweep_values["segments"]),
+                "v1": self.setup.values.get("SA", self._step_sweep_values["v1"]),
+                "v2": self.setup.values.get("SB", self._step_sweep_values["v2"]),
+                "v3": self.setup.values.get("SC", self._step_sweep_values["v3"]),
+                "v4": self.setup.values.get("SD", self._step_sweep_values["v4"]),
+                "time": self.setup.values.get("TE", self._step_sweep_values["time"]),
+                "v_step": self.setup.values.get("VS", self._step_sweep_values["v_step"]),
+            }
+        )
+        self._ramp_sweep_values.update(
+            {
+                "off_mode": self.setup.values.get("OF", self._ramp_sweep_values["off_mode"]),
+                "delay": self.setup.values.get("DL", self._ramp_sweep_values["delay"]),
+                "segments": self.setup.values.get("SM", self._ramp_sweep_values["segments"]),
+                "filter": self.setup.values.get("FI", self._ramp_sweep_values["filter"]),
+                "v1": self.setup.values.get("VA", self._ramp_sweep_values["v1"]),
+                "v2": self.setup.values.get("VB", self._ramp_sweep_values["v2"]),
+                "v3": self.setup.values.get("VC", self._ramp_sweep_values["v3"]),
+                "v4": self.setup.values.get("VD", self._ramp_sweep_values["v4"]),
+                "t1": self.setup.values.get("TA", self._ramp_sweep_values["t1"]),
+                "t2": self.setup.values.get("TB", self._ramp_sweep_values["t2"]),
+                "t3": self.setup.values.get("TC", self._ramp_sweep_values["t3"]),
+                "t4": self.setup.values.get("TD", self._ramp_sweep_values["t4"]),
+            }
+        )
+        self.stepSweepDialog.load_from_values(self._step_sweep_values)
+        self.stepSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
+        self.stepSweepDialog.set_sweep_running(self._sweep_running)
+        self.rampSweepDialog.load_from_values(self._ramp_sweep_values)
+        self.rampSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
+        self.rampSweepDialog.set_sweep_running(self._sweep_running)
         self.applySetupButton.setEnabled(True)
         self.append_log(f"Loaded setup (marked dirty): {path}")
 
@@ -1147,6 +1719,7 @@ class MainWindow(QtWidgets.QMainWindow):
         test_menu = menubar.addMenu("Quick Test")
         break_menu = menubar.addMenu("Break && Self-Test")
         result_menu = menubar.addMenu("Self-Test Result")
+        sweep_menu = menubar.addMenu("Sweep")
 
         self.actionInstrumentStatus = test_menu.addAction("Instrument Status")
         self.actionIdentify = test_menu.addAction("Identify")
@@ -1162,6 +1735,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionResultRAM = result_menu.addAction("RAM")
         self.actionResultROM = result_menu.addAction("ROM")
         self.actionResultTimer = result_menu.addAction("Timer")
+        
+
+        sweep_menu.addAction("Ramp Sweep", self.sweep_ramp_action_clicked)
+        sweep_menu.addAction("Step Sweep", self.sweep_step_action_clicked)
+        sweep_menu.addSeparator()
+        sweep_menu.addAction("Stop Sweep", self.stop_sweep_action_clicked)
+        sweep_menu.addSeparator()
+        sweep_menu.addAction("Sweep Status", self.sweep_status_action_clicked)  
 
         for action in (
             self.actionInstrumentStatus,
@@ -1178,10 +1759,67 @@ class MainWindow(QtWidgets.QMainWindow):
             self.actionResultTimer,
         ):
             action.setEnabled(False)
+
+    def _apply_facebook_widget_roles(self):
+        for button in (
+            self.connectButton,
+            self.startStreamButton,
+            self.startSaveToDbButton,
+            self.exportPlotButton,
+            self.startPolarizationButton,
+        ):
+            button.setProperty("fbRole", "primary")
+
+        for button in (
+            self.closeButton,
+            self.stopStreamButton,
+            self.stopSaveToDbButton,
+            self.stopPolarizationButton,
+        ):
+            button.setProperty("fbRole", "danger")
+
+        for widget in (
+            self.connectButton,
+            self.startStreamButton,
+            self.startSaveToDbButton,
+            self.exportPlotButton,
+            self.startPolarizationButton,
+            self.closeButton,
+            self.stopStreamButton,
+            self.stopSaveToDbButton,
+            self.stopPolarizationButton,
+        ):
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+
+    def _apply_chart_theme(self):
+        self.chart.setTitleBrush(QtGui.QBrush(QtGui.QColor("#1c1e21")))
+        self.chart.setBackgroundBrush(QtGui.QBrush(QtGui.QColor("#ffffff")))
+        self.chart.setPlotAreaBackgroundVisible(True)
+        self.chart.setPlotAreaBackgroundBrush(QtGui.QBrush(QtGui.QColor("#ffffff")))
+
+        legend = self.chart.legend()
+        legend.setLabelColor(QtGui.QColor("#606770"))
+        legend.setBrush(QtGui.QBrush(QtCore.Qt.GlobalColor.transparent))
+
+        grid_pen = QtGui.QPen(QtGui.QColor("#e4e6eb"))
+        grid_pen.setWidth(1)
+        axis_pen = QtGui.QPen(QtGui.QColor("#ccd0d5"))
+        axis_pen.setWidth(1)
+        label_brush = QtGui.QBrush(QtGui.QColor("#606770"))
+        title_brush = QtGui.QBrush(QtGui.QColor("#1c1e21"))
+
+        for axis in (self.axisX, self.axisYLeft, self.axisYRight):
+            axis.setGridLinePen(grid_pen)
+            axis.setLinePen(axis_pen)
+            axis.setLabelsBrush(label_brush)
+            axis.setTitleBrush(title_brush)
+
+        self.plotWidget.setBackgroundBrush(QtGui.QBrush(QtGui.QColor("#ffffff")))
             
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    # apply_light_style(app)
+    apply_blue_style(app)
     w = MainWindow()
     w.showMaximized()
     sys.exit(app.exec())

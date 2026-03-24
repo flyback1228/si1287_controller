@@ -77,9 +77,6 @@ class VisaWorker(QtCore.QObject):
             if not raw:
                 return
 
-            # Log raw return string from instrument
-            self._log(f"<< {raw!r}")
-
             line = raw.strip()
             if not line:
                 return
