@@ -1,6 +1,7 @@
 # main.py
 from functools import partial
 from datetime import datetime
+import json
 import math
 from pathlib import Path
 import re
@@ -26,155 +27,6 @@ def _theme_arrow_icon_paths():
         (assets_dir / "ubuntu_spin_up.svg").as_posix(),
         (assets_dir / "ubuntu_spin_down.svg").as_posix(),
     )
-
-
-def apply_light_style(app: QtWidgets.QApplication):
-    app.setStyle("Fusion")
-
-    theme_path = Path(__file__).resolve().parent / "Ubuntu.qss"
-    combo_down_icon, spin_up_icon, spin_down_icon = _theme_arrow_icon_paths()
-    fallback_qss = """
-    QMainWindow, QWidget#centralwidget { background-color: #ececec; }
-    QPlainTextEdit, QFrame#plotFrame, QChartView { background-color: #ffffff; }
-    """
-    override_qss = """
-    QWidget#centralwidget {
-        background-color: #ececec;
-    }
-    QMenuBar {
-        color: rgb(60, 60, 60);
-        background-color: rgb(245, 245, 245);
-        border-bottom: 1px solid rgb(210, 210, 210);
-    }
-    QMenuBar::item {
-        color: rgb(60, 60, 60);
-        background-color: transparent;
-        padding: 4px 8px;
-        border-radius: 4px;
-    }
-    QMenuBar::item:selected {
-        color: rgb(30, 30, 30);
-        background-color: rgb(230, 230, 230);
-        border: 1px solid rgb(214, 214, 214);
-    }
-    QMenu {
-        color: rgb(60, 60, 60);
-        background-color: rgb(250, 250, 250);
-        border: 1px solid rgb(214, 214, 214);
-    }
-    QMenu::item {
-        color: rgb(60, 60, 60);
-        padding: 5px 12px 5px 18px;
-    }
-    QMenu::item:selected {
-        color: white;
-        background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
-                                          stop:0 rgba(225, 108, 54, 255),
-                                          stop:1 rgba(246, 134, 86, 255));
-        border: 1px solid rgb(214, 102, 52);
-    }
-    QGroupBox {
-        background-color: #f7f7f7;
-        border: 1px solid #d0d0d0;
-        border-radius: 8px;
-        margin-top: 10px;
-        padding: 10px;
-    }
-    QGroupBox::title {
-        left: 8px;
-        padding: 0 4px;
-    }
-    QFrame#plotFrame, QPlainTextEdit, QChartView {
-        background-color: #ffffff;
-    }
-    QPlainTextEdit {
-        color: #3d3d3d;
-        padding: 6px;
-    }
-    QTabWidget {
-        background-color: #ececec;
-        color: #272727;
-    }
-    QTabWidget::pane {
-        background-color: #f6f6f6;
-    }
-    QComboBox {
-        padding-right: 28px;
-    }
-    QComboBox::drop-down {
-        subcontrol-origin: padding;
-        subcontrol-position: top right;
-        width: 24px;
-        border-left: 1px solid rgb(214, 214, 214);
-        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
-                                    stop:0 rgba(236, 236, 236, 255),
-                                    stop:1 rgba(255, 255, 255, 255));
-        border-top-right-radius: 4px;
-        border-bottom-right-radius: 4px;
-    }
-    QComboBox::drop-down:hover {
-        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
-                                    stop:0 rgba(246, 134, 86, 255),
-                                    stop:1 rgba(255, 173, 107, 255));
-    }
-    QComboBox::down-arrow {
-        image: url(__COMBO_DOWN_ICON__);
-        width: 10px;
-        height: 6px;
-        margin-right: 7px;
-    }
-    QSpinBox::up-button, QDoubleSpinBox::up-button, QTimeEdit::up-button, QDateEdit::up-button, QDateTimeEdit::up-button {
-        width: 18px;
-        border-left: 1px solid rgb(214, 214, 214);
-        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
-                                    stop:0 rgba(236, 236, 236, 255),
-                                    stop:1 rgba(255, 255, 255, 255));
-        border-top-right-radius: 4px;
-    }
-    QSpinBox::down-button, QDoubleSpinBox::down-button, QTimeEdit::down-button, QDateEdit::down-button, QDateTimeEdit::down-button {
-        width: 18px;
-        border-left: 1px solid rgb(214, 214, 214);
-        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
-                                    stop:0 rgba(236, 236, 236, 255),
-                                    stop:1 rgba(255, 255, 255, 255));
-        border-bottom-right-radius: 4px;
-    }
-    QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover, QTimeEdit::up-button:hover, QDateEdit::up-button:hover, QDateTimeEdit::up-button:hover,
-    QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover, QTimeEdit::down-button:hover, QDateEdit::down-button:hover, QDateTimeEdit::down-button:hover {
-        background: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0,
-                                    stop:0 rgba(246, 134, 86, 255),
-                                    stop:1 rgba(255, 173, 107, 255));
-    }
-    QSpinBox::up-arrow, QDoubleSpinBox::up-arrow, QTimeEdit::up-arrow, QDateEdit::up-arrow, QDateTimeEdit::up-arrow {
-        image: url(__SPIN_UP_ICON__);
-        width: 8px;
-        height: 6px;
-    }
-    QSpinBox::down-arrow, QDoubleSpinBox::down-arrow, QTimeEdit::down-arrow, QDateEdit::down-arrow, QDateTimeEdit::down-arrow {
-        image: url(__SPIN_DOWN_ICON__);
-        width: 8px;
-        height: 6px;
-    }
-    QStatusBar {
-        background-color: #ececec;
-        color: #3d3d3d;
-    }
-    """
-    override_qss = (
-        override_qss
-        .replace("__COMBO_DOWN_ICON__", combo_down_icon)
-        .replace("__SPIN_UP_ICON__", spin_up_icon)
-        .replace("__SPIN_DOWN_ICON__", spin_down_icon)
-    )
-
-    if theme_path.exists():
-        app.setStyleSheet(theme_path.read_text(encoding="utf-8") + "\n" + override_qss)
-    else:
-        app.setStyleSheet(fallback_qss + "\n" + override_qss)
-
-    font = QtGui.QFont("Segoe UI", 10)
-    app.setFont(font)
-
 
 def apply_blue_style(app: QtWidgets.QApplication):
     app.setStyle("Fusion")
@@ -514,9 +366,6 @@ def apply_blue_style(app: QtWidgets.QApplication):
     app.setStyleSheet(qss)
     app.setFont(QtGui.QFont("Segoe UI", 10))
 
-
-
-
 def create_app_icon() -> QtGui.QIcon:
     icon = QtGui.QIcon()
     for size in (16, 24, 32, 48, 64, 128):
@@ -657,9 +506,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._db_path = "si1287_data.db"
         self._db_table_name = ""
         self._saving_to_db = False
-        self._log_db_conn: sqlite3.Connection | None = None
-        self._log_db_cursor: sqlite3.Cursor | None = None
-        self._log_db_ready = False
+        self._updating_compensation_checks = False
+        self._sweep_defaults_path = Path(__file__).resolve().parent / "sweep_defaults.json"
 
         # -------- Setup text --------
         # if not self.setupText.toPlainText().strip():
@@ -682,7 +530,6 @@ class MainWindow(QtWidgets.QMainWindow):
         q = QtCore.Qt.ConnectionType.QueuedConnection
         self.connectRequested.connect(self.worker.connectVisa, q)
         self.disconnectRequested.connect(self.worker.disconnectVisa, q)
-        # self.applySetupRequested.connect(self.worker.apply_setup, q)
         self.startStreamRequested.connect(self.worker.start_stream, q)
         self.stopStreamRequested.connect(self.worker.stop_stream, q)
         self.startPolarizationRequested.connect(self.worker.start_polarization, q)
@@ -716,7 +563,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.potentiostatButton.clicked.connect(lambda: self.setModeRequested.emit(0))
         # self.galvanostatButton.clicked.connect(lambda: self.setModeRequested.emit(1))
 
-        # self.applySetupButton.clicked.connect(self._apply_setup_clicked)
+        self.applySetupButton.clicked.connect(self._apply_setup_clicked)
         self.startStreamButton.clicked.connect(self._start_stream_clicked)
         self.stopStreamButton.clicked.connect(self._stop_stream_clicked)
         self.startSaveToDbButton.clicked.connect(self._start_save_to_db_clicked)
@@ -758,23 +605,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.currentOffLimitActionCombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("OL", idx))
 
         # 6.8 IR COMPENSATION TYPE AND ON/OFF
-        self.irCompensationCombo.currentIndexChanged.connect(self.ir_compensation_combo_index_changed)
+        self.compensationCombo.currentIndexChanged.connect(self.compensation_combo_index_changed)
+        self.irCompensationCheckBox.toggled.connect(self.ir_compensation_checkbox_toggled)
+        self.realPartCorrectionCheckBox.toggled.connect(self.realpart_correction_checkbox_toggled)
         self.irCompensationTypeCombo.currentIndexChanged.connect(lambda idx: self.ir_compensation_type_changed(idx))
         # 6.9 FEEDBACK IR COMPENSATION
         self.feedbackCompensationSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IC", val))
         # 6.10 6.10 SAMPLED IR COMPENSATION
         self.cellCurrentOffTimeTypeCombo.setEnabled(False)
         self.outputToFRACombo.setEnabled(False)
-        self.cellCurrentOffSpin.setEnabled(False)
+        self.cellCurrentOffTimeSpin.setEnabled(False)
+        self.cellCurrentOffRatioSpin.setEnabled(False)
 
         self.outputToFRACombo.currentIndexChanged.connect(lambda idx: self.configurationChanged.emit("RO", idx))
         self.cellCurrentOffTimeTypeCombo.currentIndexChanged.connect(self.cell_current_off_time_type_combo_index_changed)
-        self.cellCurrentOffSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IN", val) if self.cellCurrentOffTimeTypeCombo.currentIndex() == 0 else self.configurationChanged.emit("IF", int(val)))
-
+        self.cellCurrentOffTimeSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IN", val) )
+        self.cellCurrentOffRatioSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("IF", int(val)))
 
         # 6.11 REAL PART CORRECTION
-        self.realPartCorrectionCombo.currentIndexChanged.connect(self.realpart_correction_combo_index_changed)
-        self.realPartCorrectionSpin.setEnabled(False)
         self.realPartCorrectionSpin.valueChanged.connect(lambda val: self.configurationChanged.emit("RP", val))
 
         # 6.12 Output conditioning facilities
@@ -825,6 +673,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._populate_visa_resources()
         self._update_plot_series_names()
         self._update_polarization_value_label(self.polarizationModeCombo.currentIndex())
+        self.compensationCombo.currentIndexChanged.emit(0)
 
         # Initial state
         # self._set_controls_enabled(False)
@@ -857,14 +706,20 @@ class MainWindow(QtWidgets.QMainWindow):
         }
         self._sweep_running = False
         self._active_sweep_type: str | None = None
+        self._sweep_status_timer = QtCore.QTimer(self)
+        self._sweep_status_timer.setInterval(2000)
+        self._sweep_status_timer.timeout.connect(self._poll_sweep_status)
+        self._load_sweep_defaults()
         self.stepSweepDialog = StepSweepWindow(self)
         self.stepSweepDialog.runButton.clicked.connect(self._start_step_sweep_from_dialog)
         self.stepSweepDialog.runButton_2.clicked.connect(self.stop_sweep_action_clicked)
+        self.stepSweepDialog.valuesSaved.connect(self._save_step_sweep_values)
         self.stepSweepDialog.load_from_values(self._step_sweep_values)
         self.stepSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
         self.rampSweepDialog = RampSweepWindow(self)
         self.rampSweepDialog.startRampSweep.clicked.connect(self._start_ramp_sweep_from_dialog)
         self.rampSweepDialog.runRampSweep.clicked.connect(self.stop_sweep_action_clicked)
+        self.rampSweepDialog.valuesSaved.connect(self._save_ramp_sweep_values)
         self.rampSweepDialog.load_from_values(self._ramp_sweep_values)
         self.rampSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
         self._set_sweep_dialogs_running(False)
@@ -904,8 +759,8 @@ class MainWindow(QtWidgets.QMainWindow):
             event.ignore()
             return
 
+        self._persist_sweep_defaults()
         self._stop_db_session()
-        self._close_log_db()
         try:
             self.disconnectRequested.emit()
         except Exception:
@@ -944,9 +799,70 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self.disconnectRequested.emit()
 
-    # def _apply_setup_clicked(self):
-    #     cmds = [line.strip() for line in self.setupText.toPlainText().splitlines()]
-    #     self.applySetupRequested.emit(cmds)
+    def _apply_setup_clicked(self):
+        if not self._is_connected:
+            self.append_log("Connect to the instrument before applying setup.")
+            return
+
+        compensation_on = self.compensationCombo.currentIndex() == 1
+        ir_on = compensation_on and self.irCompensationCheckBox.isChecked()
+        rp_on = compensation_on and self.realPartCorrectionCheckBox.isChecked()
+        fixed_type_c = self.bandwidthCombo.currentIndex() == 1
+        sampled_ir = ir_on and self.irCompensationTypeCombo.currentIndex() == 1
+        time_mode = self.cellCurrentOffTimeTypeCombo.currentIndex() == 0
+
+        commands: list[tuple[str, object]] = [
+            ("SY", self.bandwidthCombo.currentIndex()),
+            ("RR", self.standardResistantCombo.currentIndex()),
+            ("IL", self.currentLimitCombo.currentIndex()),
+            ("OL", self.currentOffLimitActionCombo.currentIndex()),
+            ("CC", 1 if ir_on else 2 if rp_on else 0),
+            ("VT", self.voltageBiasCombo.currentIndex()),
+            ("IT", self.currentBiasCombo.currentIndex()),
+            ("BR", self.biasRejectCombo.currentIndex()),
+            ("FI", self.filterCombo.currentIndex()),
+            ("VX", self.voltageAmplificationCombo.currentIndex()),
+            ("IX", self.currentAmplificationCombo.currentIndex()),
+            ("DG", self.numberOfDigitsCombo.currentIndex()),
+            ("RG", self.inputRangeCombo.currentIndex()),
+            ("TR", self.measurementTriggerCombo.currentIndex()),
+            ("DC", self.driftCombo.currentIndex()),
+            ("AV", self.averagingtCombo.currentIndex()),
+            ("NU", self.nullCombo.currentIndex()),
+            ("RU", self.digitalVolmeterCombo.currentIndex()),
+            ("PX", self.outputXCombo.currentIndex()),
+            ("PY", self.outputYCombo.currentIndex()),
+            ("UL", self.displayLeftCombo.currentIndex()),
+            ("UR", self.displayRightCombo.currentIndex()),
+        ]
+
+        if not fixed_type_c:
+            commands.append(("GB", self.bandwidthGalvanostatCombo.currentIndex()))
+            commands.append(("PB", self.bandwidthPotentiostatCombo.currentIndex()))
+
+        if ir_on:
+            commands.append(("CT", self.irCompensationTypeCombo.currentIndex()))
+            if sampled_ir:
+                commands.append(("RO", self.outputToFRACombo.currentIndex()))
+                if time_mode:
+                    commands.append(("IN", self.cellCurrentOffTimeSpin.value()))
+                else:
+                    commands.append(("IF", int(self.cellCurrentOffRatioSpin.value())))
+            else:
+                commands.append(("IC", self.feedbackCompensationSpin.value()))
+
+        if self.voltageBiasCombo.currentIndex() == 1:
+            commands.append(("VR", self.voltageBiasSpin.value()))
+        if self.currentBiasCombo.currentIndex() == 1:
+            commands.append(("IR", self.currentBiasSpin.value()))
+        if rp_on:
+            commands.append(("RP", self.realPartCorrectionSpin.value()))
+
+        for cmd, value in commands:
+            self.configurationChanged.emit(cmd, value)
+
+        self.applySetupButton.setEnabled(False)
+        self.append_log(f"Applied setup to instrument ({len(commands)} commands).")
 
     def _start_stream_clicked(self):
         if not self._is_connected:
@@ -992,6 +908,43 @@ class MainWindow(QtWidgets.QMainWindow):
         label2 = self._sanitize_db_identifier(self.seriesB.name())
         return f"run_{stamp}_{label1}_{label2}_pol"
 
+    def _load_sweep_defaults(self):
+        try:
+            if not self._sweep_defaults_path.exists():
+                return
+            data = json.loads(self._sweep_defaults_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            self.append_log(f"Failed to load sweep defaults: {e}")
+            return
+
+        step_values = data.get("step")
+        if isinstance(step_values, dict):
+            self._step_sweep_values.update(step_values)
+        ramp_values = data.get("ramp")
+        if isinstance(ramp_values, dict):
+            self._ramp_sweep_values.update(ramp_values)
+
+    def _persist_sweep_defaults(self):
+        data = {
+            "step": self._step_sweep_values,
+            "ramp": self._ramp_sweep_values,
+        }
+        try:
+            self._sweep_defaults_path.write_text(
+                json.dumps(data, indent=2),
+                encoding="utf-8",
+            )
+        except Exception as e:
+            self.append_log(f"Failed to save sweep defaults: {e}")
+
+    def _save_step_sweep_values(self, values: dict[str, int | float]):
+        self._step_sweep_values = dict(values)
+        self._persist_sweep_defaults()
+
+    def _save_ramp_sweep_values(self, values: dict[str, int | float]):
+        self._ramp_sweep_values = dict(values)
+        self._persist_sweep_defaults()
+
     def _stop_db_session(self):
         if self._db_conn is not None:
             try:
@@ -1008,45 +961,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._saving_to_db = False
         self.startSaveToDbButton.setEnabled(True)
         self.stopSaveToDbButton.setEnabled(False)
-
-    def _ensure_log_db(self) -> bool:
-        if self._log_db_ready and self._log_db_conn is not None and self._log_db_cursor is not None:
-            return True
-
-        try:
-            self._log_db_conn = sqlite3.connect(self._db_path)
-            self._log_db_cursor = self._log_db_conn.cursor()
-            self._log_db_cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS app_log (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    current_time TEXT NOT NULL,
-                    message TEXT NOT NULL
-                )
-                """
-            )
-            self._log_db_conn.commit()
-            self._log_db_ready = True
-            return True
-        except Exception:
-            self._log_db_conn = None
-            self._log_db_cursor = None
-            self._log_db_ready = False
-            return False
-
-    def _close_log_db(self):
-        if self._log_db_conn is not None:
-            try:
-                self._log_db_conn.commit()
-            except Exception:
-                pass
-            try:
-                self._log_db_conn.close()
-            except Exception:
-                pass
-        self._log_db_conn = None
-        self._log_db_cursor = None
-        self._log_db_ready = False
 
     def _start_save_to_db_clicked(self):
         # if not self._polarization_on:
@@ -1274,21 +1188,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(str)
     def append_log(self, s: str):
-        now = datetime.now()
-        display_stamp = now.strftime("%H:%M:%S")
-        db_stamp = now.strftime("%Y-%m-%d %H:%M:%S")
-        self.logText.appendPlainText(f"[{display_stamp}] {s}")
+        stamp = datetime.now().strftime("%H:%M:%S")
+        self.logText.appendPlainText(f"[{stamp}] {s}")
         sb = self.logText.verticalScrollBar()
         sb.setValue(sb.maximum())
-        if self._ensure_log_db():
-            try:
-                self._log_db_cursor.execute(
-                    "INSERT INTO app_log (current_time, message) VALUES (?, ?)",
-                    (db_stamp, s),
-                )
-                self._log_db_conn.commit()
-            except Exception:
-                self._close_log_db()
 
     def _update_polarization_value_label(self, idx: int):
         if idx == 1:
@@ -1339,53 +1242,65 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(int)
     def ir_compensation_type_changed(self, idx: int):
         self.configurationChanged.emit("CT", idx)
+        
         if idx == 0:
             self.feedbackCompensationSpin.setEnabled(True)
+            self.feedbackCompensationSpin.valueChanged.emit(self.feedbackCompensationSpin.value())  # Trigger update with current value  
             self.cellCurrentOffTimeTypeCombo.setEnabled(False)
             self.outputToFRACombo.setEnabled(False)
-            self.cellCurrentOffSpin.setEnabled(False)
+            self.cellCurrentOffTimeSpin.setEnabled(False)
+            self.cellCurrentOffRatioSpin.setEnabled(False)
+            
         elif idx == 1:
             self.feedbackCompensationSpin.setEnabled(False)
             self.cellCurrentOffTimeTypeCombo.setEnabled(True)
+            self.cellCurrentOffTimeTypeCombo.currentIndexChanged.emit(self.cellCurrentOffTimeTypeCombo.currentIndex())  # Trigger update with current index
             self.outputToFRACombo.setEnabled(True)
-            self.cellCurrentOffSpin.setEnabled(True)
+
 
     @QtCore.pyqtSlot(int)
     def cell_current_off_time_type_combo_index_changed(self, idx: int):
         if idx == 0:
-            self.cellCurrentOffTypeLabel.setText("Cell Current Off Time (Âµs))") 
-            self.cellCurrentOffSpin.setMaximum(1360)  
-            self.cellCurrentOffSpin.setMinimum(26.6)
-            self.cellCurrentOffSpin.setValue(self.cellCurrentOffSpin.value() * 1360.0 / 255)
-            self.cellCurrentOffSpin.setSingleStep(1)       
+            self.cellCurrentOffTimeSpin.setEnabled(True)
+            self.cellCurrentOffTimeSpin.valueChanged.emit(self.cellCurrentOffTimeSpin.value())  # Trigger update with current value 
+            self.cellCurrentOffRatioSpin.setEnabled(False)
         elif idx == 1:
-            self.cellCurrentOffTypeLabel.setText("Cell Current Off Ratio")
-            self.cellCurrentOffSpin.setMaximum(255)  
-            self.cellCurrentOffSpin.setMinimum(1)
-            self.cellCurrentOffSpin.setValue(int(self.cellCurrentOffSpin.value() * 255 / 1360))
-            self.cellCurrentOffSpin.setSingleStep(1)    
-    
-    @QtCore.pyqtSlot(int)    
-    def ir_compensation_combo_index_changed(self,idx:int):
-        if idx == 0:
-            self.realPartCorrectionCombo.setCurrentIndex(0)
-            self.configurationChanged.emit("CC", 0)
-            self.realPartCorrectionSpin.setEnabled(False)
-        elif idx == 1:
-            self.configurationChanged.emit("CC", 1)
-            self.realPartCorrectionSpin.setEnabled(True)
-        
-    
+            self.cellCurrentOffTimeSpin.setEnabled(False)
+            self.cellCurrentOffRatioSpin.setEnabled(True)
+            self.cellCurrentOffRatioSpin.valueChanged.emit(self.cellCurrentOffRatioSpin.value())  # Trigger update with current value
+
     @QtCore.pyqtSlot(int)
-    def realpart_correction_combo_index_changed(self, idx: int):        
-        if idx == 0:
+    def compensation_combo_index_changed(self, idx: int):
+        enabled = idx != 0
+        self.irCompensationCheckBox.setEnabled(enabled)
+        self.realPartCorrectionCheckBox.setEnabled(enabled)
+        if not enabled:
             self.configurationChanged.emit("CC", 0)
-            self.irCompensationCombo.setCurrentIndex(0)
-            self.realPartCorrectionSpin.setEnabled(False)
-        elif idx == 1:
-            self.configurationChanged.emit("CC", 2)
-            self.realPartCorrectionSpin.setEnabled(True)
+            return
+        self.ir_compensation_checkbox_toggled(self.irCompensationCheckBox.isChecked())
+        self.realpart_correction_checkbox_toggled(self.realPartCorrectionCheckBox.isChecked())
             
+    @QtCore.pyqtSlot(bool)
+    def ir_compensation_checkbox_toggled(self, checked: bool):
+        self.irCompensationTypeCombo.setEnabled(checked)
+        if not checked:
+            self.feedbackCompensationSpin.setEnabled(False)
+            self.cellCurrentOffTimeTypeCombo.setEnabled(False)
+            self.outputToFRACombo.setEnabled(False)
+            self.cellCurrentOffTimeSpin.setEnabled(False)
+            self.cellCurrentOffRatioSpin.setEnabled(False)
+            return
+        if checked:            
+            self.configurationChanged.emit("CC", 1)
+            self.ir_compensation_type_changed(self.irCompensationTypeCombo.currentIndex())
+
+    @QtCore.pyqtSlot(bool)
+    def realpart_correction_checkbox_toggled(self, checked: bool):
+        self.realPartCorrectionSpin.setEnabled(checked)
+        if checked:
+            self.configurationChanged.emit("CC", 2)
+            self.configurationChanged.emit("RP", self.realPartCorrectionSpin.value())
+           
     @QtCore.pyqtSlot(int)
     def voltage_bias_combo_index_changed(self,idx:int):
         if idx == 0:
@@ -1444,6 +1359,11 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def sweep_status_action_clicked(self):
         self.configurationChanged.emit("?ST", None)
+
+    @QtCore.pyqtSlot()
+    def _poll_sweep_status(self):
+        if self._sweep_running and self._is_connected:
+            self.configurationChanged.emit("?ST", None)
     
     @QtCore.pyqtSlot()
     def stop_sweep_action_clicked(self):
@@ -1466,6 +1386,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._sweep_running = running
         self.stepSweepDialog.set_sweep_running(running)
         self.rampSweepDialog.set_sweep_running(running)
+        self.tab.setEnabled(not running)
+        if running and self._is_connected:
+            self._sweep_status_timer.start()
+        else:
+            self._sweep_status_timer.stop()
         self.sweepLed.set_connected(running)
         if running and self._active_sweep_type == "step":
             self.sweepStatusLabel.setText("Step Running")
@@ -1566,78 +1491,58 @@ class MainWindow(QtWidgets.QMainWindow):
         path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save setup", "", "JSON (*.json)")
         if not path:
             return
-        self.setup.values["PO"] = self.polarizationModeCombo.currentIndex()
-        self.setup.values["PV"] = self.dcPotentialSpin.value()
-        self.setup.values["PI"] = self.polarizationSignalGainCombo.currentIndex()
+        values: dict[str, object] = {}
 
-        self.setup.values["ON"] = self.polarizationOnModeCombo.currentIndex()
-        self.setup.values["SY"] = self.bandwidthCombo.currentIndex()
-        self.setup.values["GB"] = self.bandwidthGalvanostatCombo.currentIndex()
-        self.setup.values["PB"] = self.bandwidthPotentiostatCombo.currentIndex()
-
-        self.setup.values["BY"] = self.standbyModeCombo.currentIndex()
-        
-
-        self.setup.values["RR"] = self.standardResistantCombo.currentIndex()
-        
-        self.setup.values["IL"] = self.currentLimitCombo.currentIndex()
-        self.setup.values["OL"] = self.currentOffLimitActionCombo.currentIndex()
-        self.setup.values["CC"] = self.irCompensationCombo.currentIndex()
-        self.setup.values["CT"] = self.irCompensationTypeCombo.currentIndex()
-        self.setup.values["IC"] = self.feedbackCompensationSpin.value()
-        self.setup.values["RO"] = self.outputToFRACombo.currentIndex()
-        # self.setup.values["IN"] = self.cellCurrentOffSpin.value() if self.cellCurrentOffTimeTypeCombo.currentIndex() == 0 else int(self.cellCurrentOffSpin.value())
-        self.setup.values["CELLCURRENT"] = self.cellCurrentOffTimeTypeCombo.currentIndex()
-        if self.cellCurrentOffTimeTypeCombo.currentIndex() == 0:
-            self.setup.values["IN"] = self.cellCurrentOffSpin.value()
+        values["PO"] = self.polarizationModeCombo.currentIndex()
+        values["BY"] = self.standbyModeCombo.currentIndex()
+        values["ON"] = self.polarizationOnModeCombo.currentIndex()
+        values["PI"] = self.polarizationSignalGainCombo.currentIndex()
+        if self.polarizationModeCombo.currentIndex() == 1:
+            values["PC"] = self.dcPotentialSpin.value()
         else:
-            self.setup.values["IF"] = int(self.cellCurrentOffSpin.value())
-        
-        self.setup.values["RP"] = self.realPartCorrectionSpin.value() if self.realPartCorrectionCombo.currentIndex() == 1 else None
-        self.setup.values["CC"] = 0 if self.realPartCorrectionCombo.currentIndex() == 0 else 2
-        self.setup.values["VT"] = 0 if self.voltageBiasCombo.currentIndex() == 0 else 1
-        self.setup.values["VR"] = self.voltageBiasSpin.value() if self.voltageBiasCombo.currentIndex() == 1 else None
-        self.setup.values["IT"] = 0 if self.currentBiasCombo.currentIndex() == 0 else 1
-        self.setup.values["IR"] = self.currentBiasSpin.value() if self.currentBiasCombo.currentIndex() == 1 else None
-        self.setup.values["BR"] = self.biasRejectCombo.currentIndex()
-        self.setup.values["FI"] = self.filterCombo.currentIndex()
-        self.setup.values["VX"] = self.voltageAmplificationCombo.currentIndex()
-        self.setup.values["IX"] = self.currentAmplificationCombo.currentIndex()
-        self._step_sweep_values = self.stepSweepDialog.values()
-        self._ramp_sweep_values = self.rampSweepDialog.values()
+            values["PV"] = self.dcPotentialSpin.value()
 
-        self.setup.values["OF"] = self._step_sweep_values["off_mode"]
-        self.setup.values["DL"] = self._step_sweep_values["delay"]
-        self.setup.values["SM"] = self._step_sweep_values["segments"]
-        self.setup.values["SA"] = self._step_sweep_values["v1"]
-        self.setup.values["SB"] = self._step_sweep_values["v2"]
-        self.setup.values["SC"] = self._step_sweep_values["v3"]
-        self.setup.values["SD"] = self._step_sweep_values["v4"]
-        self.setup.values["TE"] = self._step_sweep_values["time"]
-        self.setup.values["VS"] = self._step_sweep_values["v_step"]
+        values["SY"] = self.bandwidthCombo.currentIndex()
+        values["GB"] = self.bandwidthGalvanostatCombo.currentIndex()
+        values["PB"] = self.bandwidthPotentiostatCombo.currentIndex()
 
-        self.setup.values["VA"] = self._ramp_sweep_values["v1"]
-        self.setup.values["TA"] = self._ramp_sweep_values["t1"]
-        self.setup.values["VB"] = self._ramp_sweep_values["v2"]
-        self.setup.values["TB"] = self._ramp_sweep_values["t2"]
-        self.setup.values["VC"] = self._ramp_sweep_values["v3"]
-        self.setup.values["TC"] = self._ramp_sweep_values["t3"]
-        self.setup.values["VD"] = self._ramp_sweep_values["v4"]
-        self.setup.values["TD"] = self._ramp_sweep_values["t4"]
-        self.setup.values["FI"] = self._ramp_sweep_values["filter"]
-        self.setup.values["VX"] = self.voltageAmplificationCombo.currentIndex()
-        self.setup.values["IX"] = self.currentAmplificationCombo.currentIndex()
+        values["RR"] = self.standardResistantCombo.currentIndex()
+        values["IL"] = self.currentLimitCombo.currentIndex()
+        values["OL"] = self.currentOffLimitActionCombo.currentIndex()
 
-        self.setup.values["DG"] = self.numberOfDigitsCombo.currentIndex()
-        self.setup.values["RG"] = self.inputRangeCombo.currentIndex()
-        self.setup.values["TR"] = self.measurementTriggerCombo.currentIndex()
-        self.setup.values["DC"] = self.driftCombo.currentIndex()
-        self.setup.values["AV"] = self.averagingtCombo.currentIndex()
-        self.setup.values["NU"] = self.nullCombo.currentIndex()
-        self.setup.values["RU"] = self.digitalVolmeterCombo.currentIndex()
+        values["COMPENSATION"] = self.compensationCombo.currentIndex()
+        values["IR_COMPENSATION_ENABLED"] = self.irCompensationCheckBox.isChecked()
+        values["REAL_PART_CORRECTION_ENABLED"] = self.realPartCorrectionCheckBox.isChecked()
+        values["CT"] = self.irCompensationTypeCombo.currentIndex()
+        values["IC"] = self.feedbackCompensationSpin.value()
+        values["RO"] = self.outputToFRACombo.currentIndex()
+        values["CELLCURRENT"] = self.cellCurrentOffTimeTypeCombo.currentIndex()
+        values["IN"] = self.cellCurrentOffTimeSpin.value()
+        values["IF"] = int(self.cellCurrentOffRatioSpin.value())
+        values["RP"] = self.realPartCorrectionSpin.value() if self.realPartCorrectionCheckBox.isChecked() else None
 
-        self.setup.values["PX"] = self.outputXCombo.currentIndex()
-        self.setup.values["PY"] = self.outputYCombo.currentIndex()
+        values["VT"] = 0 if self.voltageBiasCombo.currentIndex() == 0 else 1
+        values["VR"] = self.voltageBiasSpin.value() if self.voltageBiasCombo.currentIndex() == 1 else None
+        values["IT"] = 0 if self.currentBiasCombo.currentIndex() == 0 else 1
+        values["IR"] = self.currentBiasSpin.value() if self.currentBiasCombo.currentIndex() == 1 else None
+        values["BR"] = self.biasRejectCombo.currentIndex()
+        values["FI"] = self.filterCombo.currentIndex()
+        values["VX"] = self.voltageAmplificationCombo.currentIndex()
+        values["IX"] = self.currentAmplificationCombo.currentIndex()
+
+        values["DG"] = self.numberOfDigitsCombo.currentIndex()
+        values["RG"] = self.inputRangeCombo.currentIndex()
+        values["TR"] = self.measurementTriggerCombo.currentIndex()
+        values["DC"] = self.driftCombo.currentIndex()
+        values["AV"] = self.averagingtCombo.currentIndex()
+        values["NU"] = self.nullCombo.currentIndex()
+        values["RU"] = self.digitalVolmeterCombo.currentIndex()
+        values["PX"] = self.outputXCombo.currentIndex()
+        values["PY"] = self.outputYCombo.currentIndex()
+        values["UL"] = self.displayLeftCombo.currentIndex()
+        values["UR"] = self.displayRightCombo.currentIndex()
+
+        self.setup.values = values
 
         self.setup.save_json(path)
         self.append_log(f"Saved setup: {sys.path}")
@@ -1647,42 +1552,114 @@ class MainWindow(QtWidgets.QMainWindow):
         if not path:
             return
         self.setup.load_json(path)
-        self._step_sweep_values.update(
-            {
-                "off_mode": self.setup.values.get("OF", self._step_sweep_values["off_mode"]),
-                "delay": self.setup.values.get("DL", self._step_sweep_values["delay"]),
-                "segments": self.setup.values.get("SM", self._step_sweep_values["segments"]),
-                "v1": self.setup.values.get("SA", self._step_sweep_values["v1"]),
-                "v2": self.setup.values.get("SB", self._step_sweep_values["v2"]),
-                "v3": self.setup.values.get("SC", self._step_sweep_values["v3"]),
-                "v4": self.setup.values.get("SD", self._step_sweep_values["v4"]),
-                "time": self.setup.values.get("TE", self._step_sweep_values["time"]),
-                "v_step": self.setup.values.get("VS", self._step_sweep_values["v_step"]),
-            }
-        )
-        self._ramp_sweep_values.update(
-            {
-                "off_mode": self.setup.values.get("OF", self._ramp_sweep_values["off_mode"]),
-                "delay": self.setup.values.get("DL", self._ramp_sweep_values["delay"]),
-                "segments": self.setup.values.get("SM", self._ramp_sweep_values["segments"]),
-                "filter": self.setup.values.get("FI", self._ramp_sweep_values["filter"]),
-                "v1": self.setup.values.get("VA", self._ramp_sweep_values["v1"]),
-                "v2": self.setup.values.get("VB", self._ramp_sweep_values["v2"]),
-                "v3": self.setup.values.get("VC", self._ramp_sweep_values["v3"]),
-                "v4": self.setup.values.get("VD", self._ramp_sweep_values["v4"]),
-                "t1": self.setup.values.get("TA", self._ramp_sweep_values["t1"]),
-                "t2": self.setup.values.get("TB", self._ramp_sweep_values["t2"]),
-                "t3": self.setup.values.get("TC", self._ramp_sweep_values["t3"]),
-                "t4": self.setup.values.get("TD", self._ramp_sweep_values["t4"]),
-            }
-        )
-        self.stepSweepDialog.load_from_values(self._step_sweep_values)
-        self.stepSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
-        self.stepSweepDialog.set_sweep_running(self._sweep_running)
-        self.rampSweepDialog.load_from_values(self._ramp_sweep_values)
-        self.rampSweepDialog.set_polarization_mode(self.polarizationModeCombo.currentIndex())
-        self.rampSweepDialog.set_sweep_running(self._sweep_running)
+        values = self.setup.values
+
+        widget_blockers = [
+            QtCore.QSignalBlocker(self.polarizationModeCombo),
+            QtCore.QSignalBlocker(self.standbyModeCombo),
+            QtCore.QSignalBlocker(self.polarizationOnModeCombo),
+            QtCore.QSignalBlocker(self.polarizationSignalGainCombo),
+            QtCore.QSignalBlocker(self.dcPotentialSpin),
+            QtCore.QSignalBlocker(self.bandwidthCombo),
+            QtCore.QSignalBlocker(self.bandwidthGalvanostatCombo),
+            QtCore.QSignalBlocker(self.bandwidthPotentiostatCombo),
+            QtCore.QSignalBlocker(self.standardResistantCombo),
+            QtCore.QSignalBlocker(self.currentLimitCombo),
+            QtCore.QSignalBlocker(self.currentOffLimitActionCombo),
+            QtCore.QSignalBlocker(self.compensationCombo),
+            QtCore.QSignalBlocker(self.irCompensationCheckBox),
+            QtCore.QSignalBlocker(self.realPartCorrectionCheckBox),
+            QtCore.QSignalBlocker(self.irCompensationTypeCombo),
+            QtCore.QSignalBlocker(self.feedbackCompensationSpin),
+            QtCore.QSignalBlocker(self.outputToFRACombo),
+            QtCore.QSignalBlocker(self.cellCurrentOffTimeTypeCombo),
+            QtCore.QSignalBlocker(self.cellCurrentOffTimeSpin),
+            QtCore.QSignalBlocker(self.cellCurrentOffRatioSpin),
+            QtCore.QSignalBlocker(self.realPartCorrectionSpin),
+            QtCore.QSignalBlocker(self.voltageBiasCombo),
+            QtCore.QSignalBlocker(self.voltageBiasSpin),
+            QtCore.QSignalBlocker(self.currentBiasCombo),
+            QtCore.QSignalBlocker(self.currentBiasSpin),
+            QtCore.QSignalBlocker(self.biasRejectCombo),
+            QtCore.QSignalBlocker(self.filterCombo),
+            QtCore.QSignalBlocker(self.voltageAmplificationCombo),
+            QtCore.QSignalBlocker(self.currentAmplificationCombo),
+            QtCore.QSignalBlocker(self.numberOfDigitsCombo),
+            QtCore.QSignalBlocker(self.inputRangeCombo),
+            QtCore.QSignalBlocker(self.measurementTriggerCombo),
+            QtCore.QSignalBlocker(self.driftCombo),
+            QtCore.QSignalBlocker(self.averagingtCombo),
+            QtCore.QSignalBlocker(self.nullCombo),
+            QtCore.QSignalBlocker(self.digitalVolmeterCombo),
+            QtCore.QSignalBlocker(self.outputXCombo),
+            QtCore.QSignalBlocker(self.outputYCombo),
+            QtCore.QSignalBlocker(self.displayLeftCombo),
+            QtCore.QSignalBlocker(self.displayRightCombo),
+        ]
+
+        self.polarizationModeCombo.setCurrentIndex(values.get("PO", self.polarizationModeCombo.currentIndex()))
+        self.standbyModeCombo.setCurrentIndex(values.get("BY", self.standbyModeCombo.currentIndex()))
+        self.polarizationOnModeCombo.setCurrentIndex(values.get("ON", self.polarizationOnModeCombo.currentIndex()))
+        self.polarizationSignalGainCombo.setCurrentIndex(values.get("PI", self.polarizationSignalGainCombo.currentIndex()))
+        pol_mode = self.polarizationModeCombo.currentIndex()
+        self.dcPotentialSpin.setValue(values.get("PC" if pol_mode == 1 else "PV", self.dcPotentialSpin.value()))
+
+        self.bandwidthCombo.setCurrentIndex(values.get("SY", self.bandwidthCombo.currentIndex()))
+        self.bandwidthGalvanostatCombo.setCurrentIndex(values.get("GB", self.bandwidthGalvanostatCombo.currentIndex()))
+        self.bandwidthPotentiostatCombo.setCurrentIndex(values.get("PB", self.bandwidthPotentiostatCombo.currentIndex()))
+        self.standardResistantCombo.setCurrentIndex(values.get("RR", self.standardResistantCombo.currentIndex()))
+        self.currentLimitCombo.setCurrentIndex(values.get("IL", self.currentLimitCombo.currentIndex()))
+        self.currentOffLimitActionCombo.setCurrentIndex(values.get("OL", self.currentOffLimitActionCombo.currentIndex()))
+
+        compensation_enabled = values.get("COMPENSATION", 0)
+        self.compensationCombo.setCurrentIndex(compensation_enabled)
+        self.irCompensationCheckBox.setChecked(compensation_enabled == 1 and values.get("IR_COMPENSATION_ENABLED", False))
+        self.realPartCorrectionCheckBox.setChecked(compensation_enabled == 1 and values.get("REAL_PART_CORRECTION_ENABLED", False))
+        self.irCompensationTypeCombo.setCurrentIndex(values.get("CT", self.irCompensationTypeCombo.currentIndex()))
+        self.feedbackCompensationSpin.setValue(values.get("IC", self.feedbackCompensationSpin.value()))
+        self.outputToFRACombo.setCurrentIndex(values.get("RO", self.outputToFRACombo.currentIndex()))
+        self.cellCurrentOffTimeTypeCombo.setCurrentIndex(values.get("CELLCURRENT", self.cellCurrentOffTimeTypeCombo.currentIndex()))
+        self.cellCurrentOffTimeSpin.setValue(values.get("IN", self.cellCurrentOffTimeSpin.value()))
+        self.cellCurrentOffRatioSpin.setValue(int(values.get("IF", self.cellCurrentOffRatioSpin.value())))
+        rp_value = values.get("RP")
+        if rp_value is not None:
+            self.realPartCorrectionSpin.setValue(rp_value)
+
+        self.voltageBiasCombo.setCurrentIndex(values.get("VT", self.voltageBiasCombo.currentIndex()))
+        if values.get("VR") is not None:
+            self.voltageBiasSpin.setValue(values["VR"])
+        self.currentBiasCombo.setCurrentIndex(values.get("IT", self.currentBiasCombo.currentIndex()))
+        if values.get("IR") is not None:
+            self.currentBiasSpin.setValue(values["IR"])
+        self.biasRejectCombo.setCurrentIndex(values.get("BR", self.biasRejectCombo.currentIndex()))
+        self.filterCombo.setCurrentIndex(values.get("FI", self.filterCombo.currentIndex()))
+        self.voltageAmplificationCombo.setCurrentIndex(values.get("VX", self.voltageAmplificationCombo.currentIndex()))
+        self.currentAmplificationCombo.setCurrentIndex(values.get("IX", self.currentAmplificationCombo.currentIndex()))
+
+        self.numberOfDigitsCombo.setCurrentIndex(values.get("DG", self.numberOfDigitsCombo.currentIndex()))
+        self.inputRangeCombo.setCurrentIndex(values.get("RG", self.inputRangeCombo.currentIndex()))
+        self.measurementTriggerCombo.setCurrentIndex(values.get("TR", self.measurementTriggerCombo.currentIndex()))
+        self.driftCombo.setCurrentIndex(values.get("DC", self.driftCombo.currentIndex()))
+        self.averagingtCombo.setCurrentIndex(values.get("AV", self.averagingtCombo.currentIndex()))
+        self.nullCombo.setCurrentIndex(values.get("NU", self.nullCombo.currentIndex()))
+        self.digitalVolmeterCombo.setCurrentIndex(values.get("RU", self.digitalVolmeterCombo.currentIndex()))
+        self.outputXCombo.setCurrentIndex(values.get("PX", self.outputXCombo.currentIndex()))
+        self.outputYCombo.setCurrentIndex(values.get("PY", self.outputYCombo.currentIndex()))
+        self.displayLeftCombo.setCurrentIndex(values.get("UL", self.displayLeftCombo.currentIndex()))
+        self.displayRightCombo.setCurrentIndex(values.get("UR", self.displayRightCombo.currentIndex()))
+
+        del widget_blockers
+
+        self.polarzation_mode = self.polarizationModeCombo.currentIndex()
+        self.standby_mode = self.standbyModeCombo.currentIndex()
+        self._update_polarization_value_label(self.polarizationModeCombo.currentIndex())
+        self.bandwidth_combo_index_changed(self.bandwidthCombo.currentIndex())
+        self._update_compensation_controls()
+        self.voltage_bias_combo_index_changed(self.voltageBiasCombo.currentIndex())
+        self.current_bias_combo_index_changed(self.currentBiasCombo.currentIndex())
+        self._update_plot_series_names()
         self.applySetupButton.setEnabled(True)
+        self._apply_setup_clicked()
         self.append_log(f"Loaded setup (marked dirty): {path}")
 
     def export_plot(self):

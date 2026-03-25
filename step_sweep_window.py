@@ -1,15 +1,16 @@
 from pathlib import Path
 
-from PyQt6 import QtWidgets, uic
+from PyQt6 import QtCore, QtWidgets, uic
 
 
 class StepSweepWindow(QtWidgets.QDialog):
+    valuesSaved = QtCore.pyqtSignal(object)
+
     def __init__(self, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
         ui_path = Path(__file__).resolve().parent / "step_sweep_window.ui"
         uic.loadUi(str(ui_path), self)
         self.closeButton.clicked.connect(self.hide)
-        self.runButton_2.clicked.connect(self.hide)
         self._is_current_mode = False
         self.set_sweep_running(False)
 
@@ -51,5 +52,9 @@ class StepSweepWindow(QtWidgets.QDialog):
         self.groupBoxLevels.setEnabled(not running)
         self.groupBoxStep.setEnabled(not running)
         self.runButton.setEnabled(not running)
-        self.closeButton.setEnabled(not running)
+        self.closeButton.setEnabled(True)
         self.runButton_2.setEnabled(running)
+
+    def hideEvent(self, event):
+        self.valuesSaved.emit(self.values())
+        super().hideEvent(event)

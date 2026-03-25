@@ -1,15 +1,16 @@
 from pathlib import Path
 
-from PyQt6 import QtWidgets, uic
+from PyQt6 import QtCore, QtWidgets, uic
 
 
 class RampSweepWindow(QtWidgets.QDialog):
+    valuesSaved = QtCore.pyqtSignal(object)
+
     def __init__(self, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
         ui_path = Path(__file__).resolve().parent / "ramp_sweep_window.ui"
         uic.loadUi(str(ui_path), self)
         self.closeButton.clicked.connect(self.hide)
-        self.runRampSweep.clicked.connect(self.hide)
         self._is_current_mode = False
         self.set_sweep_running(False)
 
@@ -54,5 +55,9 @@ class RampSweepWindow(QtWidgets.QDialog):
         self.groupBoxSetup.setEnabled(not running)
         self.groupBoxLevels.setEnabled(not running)
         self.startRampSweep.setEnabled(not running)
-        self.closeButton.setEnabled(not running)
+        self.closeButton.setEnabled(True)
         self.runRampSweep.setEnabled(running)
+
+    def hideEvent(self, event):
+        self.valuesSaved.emit(self.values())
+        super().hideEvent(event)
