@@ -116,7 +116,7 @@ def apply_blue_style(app: QtWidgets.QApplication):
         border: 1px solid #d8dde6;
         border-radius: 10px;
         padding: 8px 14px;
-        min-height: 18px;
+        min-height: 14px;
         font-weight: 600;
     }
 
@@ -168,7 +168,7 @@ def apply_blue_style(app: QtWidgets.QApplication):
         border: 1px solid #bcc5d3;
         border-radius: 8px;
         padding: 6px 10px;
-        min-height: 28px;
+        min-height: 20px;
         color: #1c1e21;
     }
 
@@ -178,7 +178,7 @@ def apply_blue_style(app: QtWidgets.QApplication):
         border-radius: 8px;
         padding-left: 10px;
         padding-right: 28px;
-        min-height: 28px;
+        min-height: 20px;
         color: #1c1e21;
     }
 
@@ -332,7 +332,7 @@ def apply_blue_style(app: QtWidgets.QApplication):
     QScrollBar::handle:vertical {
         background: #c9ccd1;
         border-radius: 6px;
-        min-height: 28px;
+        min-height: 20px;
     }
 
     QScrollBar::handle:vertical:hover {
@@ -1031,7 +1031,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.configurationChanged.emit("BY", self.standbyModeCombo.currentIndex())
         self.configurationChanged.emit("ON", self.polarizationOnModeCombo.currentIndex())
         self.configurationChanged.emit("PI", self.polarizationSignalGainCombo.currentIndex())
-        self.configurationChanged.emit("PV", self.dcPotentialSpin.value())
+        if self.polarizationModeCombo.currentIndex()==0:  # Potentiostatic
+            self.configurationChanged.emit("PV", self.dcPotentialSpin.value())
+        else:  # Galvanostatic
+            self.configurationChanged.emit("PC", self.dcPotentialSpin.value())
         self.startPolarizationRequested.emit()
 
     def _stop_polarization_clicked(self):
